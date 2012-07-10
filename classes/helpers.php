@@ -235,18 +235,13 @@ class Text
 	static function getCharWidth(&$cw, $u, $isdef=true)
 	{
 		if ($u == 0) {
-			$w = false;
+			return $isdef? false : 0;
 		} else {
 			$w = (ord($cw[$u*2]) << 8) + ord($cw[$u*2+1]);
-		}
-		if ($w == 65535) {
-			return 0;
-		} else if ($w) {
+			if ($w == 65535) {
+				return 0;
+			}
 			return $w;
-		} else if ($isdef) {
-			return false;
-		} else {
-			return 0;
 		}
 	}
 	

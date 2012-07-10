@@ -7659,9 +7659,11 @@ function Annotation($text, $x=0, $y=0, $icon='Note', $author='', $subject='', $o
 	}
 	if (!$this->annotMargin) { $y -= $this->FontSize / 2; }
 
-	if (!$opacity && $this->annotMargin) { $opacity = 1; }
-	else if (!$opacity) { $opacity = $this->annotOpacity; }
-
+	if (!$opacity) {
+		if ($this->annotMargin) { $opacity = 1; }
+		else { $opacity = $this->annotOpacity; }
+	}
+	
 	$an = array('txt' => $text, 'x' => $x, 'y' => $y, 'opt' => array('Icon'=>$icon, 'T'=>$author, 'Subj'=>$subject, 'C'=>$colarray, 'CA'=>$opacity, 'popup'=>$popup, 'file'=>$file));
 
 	if ($this->keep_block_together) {	// Save to array - don't write yet
@@ -8613,11 +8615,6 @@ function _putcatalog() {
 		$as="<</Event /Print /OCGs [$p $v $h] /Category [/Print]>> <</Event /View /OCGs [$p $v $h] /Category [/View]>>";
 		$this->_out("/OCProperties <</OCGs [$p $v $h] /D <</ON [$p] /OFF [$v] /OFF [$h] /AS [$as]>>>>");
 	}
-}
-
-// Inactive function left for backwards compatability
-function SetUserRights($enable=true, $annots="", $form="", $signature="") {
-	// Does nothing
 }
 
 function _enddoc() {
@@ -31261,7 +31258,7 @@ function ArabJoin($str) {
 			$pres = (mb_substr($this->arabLigHex, $pos, 4, 'utf-8'));
 			// If presentation forms for mandatory ligatures with diacritics not present (even if remapped from e.g. uni0644uni0625)
 			// try replacing with mandatory ligature Alef/lam isolated/final FEFB/FEFC + diacritic glyph
-			if (!Text::charDefined($this->CurrentFont['cw'], hexdec($pres)) && $this->_charDefined($this->CurrentFont['cw'], hexdec('FEFB'))) { 
+			if (!Text::charDefined($this->CurrentFont['cw'], hexdec($pres)) && Text::charDefined($this->CurrentFont['cw'], hexdec('FEFB'))) { 
 				if ($pres=='FEF5') { $output[] = strcode2utf('&#xFEFB;&#x0653;'); }
 				else if ($pres=='FEF6') { $output[] = strcode2utf('&#xFEFC;&#x0653;'); }
 				else if ($pres=='FEF7') { $output[] = strcode2utf('&#xFEFB;&#x0654;'); }
@@ -31295,11 +31292,11 @@ function get_arab_glyphs($char, $type) {
 		// If presentation form specified FB** - FE** = Arabic presentation Forms
 		if (preg_match("/[\x{FB50}-\x{FEFF}]/u",$this->arabGlyphs[$char][$type])) {
 			$unicode = $this->UTF8StringToArray($this->arabGlyphs[$char][$type], false);
-			if ($this->_charDefined($this->CurrentFont['cw'],$unicode[0])) { return $this->arabGlyphs[$char][$type]; }
+			if (Text::charDefined($this->CurrentFont['cw'],$unicode[0])) { return $this->arabGlyphs[$char][$type]; }
 			else if (isset($this->CurrentFont['unAGlyphs'])) {
 				$uni = $this->UTF8StringToArray($char, false);
 				$pua = $uni[0] - 1536 + 62464 + 256*$type ;
-				if ($this->_charDefined($this->CurrentFont['cw'], $pua)) { return strcode2utf('&#x' . dechex($pua) . ';'); }
+				if (Text::charDefined($this->CurrentFont['cw'], $pua)) { return strcode2utf('&#x' . dechex($pua) . ';'); }
 				else return $char;
 			}
 			else return $char;
@@ -31307,7 +31304,7 @@ function get_arab_glyphs($char, $type) {
 		// If PUA form specified and unAGlphs font set F5** F6** F7** = Private use area used by unAGlyphs in mPDF
 		if (preg_match("/[\x{F500}-\x{F7FF}]/u",$this->arabGlyphs[$char][$type]) && isset($this->CurrentFont['unAGlyphs'])) {
 			$unicode = $this->UTF8StringToArray($this->arabGlyphs[$char][$type], false);
-			if ($this->_charDefined($this->CurrentFont['cw'],$unicode[0])) { return $this->arabGlyphs[$char][$type]; }
+			if (Text::charDefined($this->CurrentFont['cw'],$unicode[0])) { return $this->arabGlyphs[$char][$type]; }
 			else return $char;
 		}
 		return $this->arabGlyphs[$char][$type]; 
