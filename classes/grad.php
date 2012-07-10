@@ -479,8 +479,7 @@ function parseMozGradient($bg) {
 		// [<point> || <angle>,] = [<% em px left center right bottom top> || <deg grad rad 0>,]
 		if (preg_match('/([\-]*[0-9\.]+)(deg|grad|rad)/i',$bgr[0],$m)) {
 			$angle = $m[1] + 0;
-			if (strtolower($m[2])=='deg') { $angle = $angle; }
-			else if (strtolower($m[2])=='grad') { $angle *= (360/400); }
+			if (strtolower($m[2])=='grad') { $angle *= (360/400); }
 			else if (strtolower($m[2])=='rad') { $angle = rad2deg($angle); }
 			while($angle < 0) { $angle += 360; }
 			$angle = ($angle % 360);
