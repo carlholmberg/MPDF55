@@ -429,22 +429,22 @@ class Numeric
 	 *
 	 * @param  bool  $usefontsize   Set to false for e.g. margins - will ignore fontsize for % values
 	 */
-	static function convertSize($size=5, $dpi=96, $maxsize=0, $fontsize=false, $usefontsize=true)
+	static function convertSize($size=5, $maxsize=0, $fontsize=false, $usefontsize=true)
 	{
 		//Identify size (remember: we are using 'mm' units here)
 		$size = strtolower($size);
 		if ($size == 'thin') {
 			//1 pixel width for table borders
-			return 25.4 / $dpi;
+			return 25.4 / Conf::DPI;
 		} else if ($size == 'medium') {
 			//3 pixel width for table borders
-			return 3 * 25.4 / $dpi;
+			return 3 * 25.4 / $Conf::DPI;
 		} else if ($size == 'thick') {
 			//5 pixel width for table borders
-			return 5 * 25.4 / $dpi;
+			return 5 * 25.4 / Conf::DPI;
 		} else if (strstr($size, 'px')) {
 			//pixels
-			return $size * 25.4 / $dpi;
+			return $size * 25.4 / Conf::DPI;
 		} else if (strstr($size, 'cm')) {
 			//centimeters
 			return $size * 10;
@@ -483,7 +483,7 @@ class Numeric
 			return $size * 2 * (($fontsize)? $fontsize : $maxsize);
 		}
 		//nothing == px
-		return $size * 25.4 / $dpi;
+		return $size * 25.4 / Conf::DPI;
 	}
 	
 	/**
