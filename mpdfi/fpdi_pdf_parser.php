@@ -238,7 +238,6 @@ class fpdi_pdf_parser extends pdf_parser {
 			$stream = $decoder->decode($stream);
 			break;
                 case null:
-			$stream = $stream;
 			break;
                 default:
 			$this->fpdi->error(sprintf("Unsupported Filter: %s",$_filter[1]));

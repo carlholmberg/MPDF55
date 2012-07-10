@@ -37,7 +37,7 @@ if (!defined('_MPDF_URI')) define('_MPDF_URI',_MPDF_PATH);
 
 require_once(_MPDF_PATH.'includes/functions.php');
 require_once(_MPDF_PATH.'config_cp.php');
-require_once(_MPDF_PATH.'classes/cache.php');
+//require_once(_MPDF_PATH.'classes/cache.php');
 require_once(_MPDF_PATH.'classes/helpers.php');
 
 if (!defined('_JPGRAPH_PATH')) define("_JPGRAPH_PATH", _MPDF_PATH.'jpgraph/'); 
@@ -122,7 +122,6 @@ var $watermarkImgBehind;
 var $justifyB4br;
 var $packTableData;
 var $pgsIns;
-var $simpleTables;
 var $enableImports;
 
 var $debug;
@@ -11284,7 +11283,7 @@ function TableHeaderFooter($content='',$tablestartpage='',$tablestartcolumn ='',
 /*-- END BACKGROUNDS --*/
 
 	// TABLE BORDER - if separate OR collapsed and only table border
-	if (($table['borders_separate'] || ($this->simpleTables && !$table['simple']['border'])) && $table['border']) { 
+	if ($table['borders_separate']) { 
 			$halfspaceL = $table['padding']['L'] + ($table['border_spacing_H']/2);
 			$halfspaceR = $table['padding']['R'] + ($table['border_spacing_H']/2);
 			$halfspaceT = $table['padding']['T'] + ($table['border_spacing_V']/2);
@@ -17319,7 +17318,6 @@ function OpenTag($tag,$attr)
 	// New table - any level
 	if ($this->cacheTables) {
 		$this->packTableData = true;	// required for cacheTables
-		$this->simpleTables = false;  // Cannot co-exist with cacheTables
 		$table['cache'] = _MPDF_TEMP_PATH.'_tempTblCache'.RAND(1,1000000).'.dat';
 		$fh = fopen($table['cache'] , "wb") or $this->Error("When using cacheTables, you must have read/write access to cache files (".$table['cache'] .")");
 		fwrite($fh, "\x00");
@@ -17759,7 +17757,7 @@ function OpenTag($tag,$attr)
 	$this->col = -1;
 	$properties = $this->MergeCSS('TABLE',$tag,$attr);
 
-	if (!$this->simpleTables && (!isset($this->table[$this->tableLevel][$this->tbctr[$this->tableLevel]]['borders_separate']) || !$this->table[$this->tableLevel][$this->tbctr[$this->tableLevel]]['borders_separate'])) { 
+	if (!isset($this->table[$this->tableLevel][$this->tbctr[$this->tableLevel]]['borders_separate']) || !$this->table[$this->tableLevel][$this->tbctr[$this->tableLevel]]['borders_separate']) { 
 		if (isset($properties['BORDER-LEFT']) && $properties['BORDER-LEFT']) { $this->table[$this->tableLevel][$this->tbctr[$this->tableLevel]]['trborder-left'][$this->row] = $properties['BORDER-LEFT']; }
 		if (isset($properties['BORDER-RIGHT']) && $properties['BORDER-RIGHT']) { $this->table[$this->tableLevel][$this->tbctr[$this->tableLevel]]['trborder-right'][$this->row] = $properties['BORDER-RIGHT']; }
 		if (isset($properties['BORDER-TOP']) && $properties['BORDER-TOP']) { $this->table[$this->tableLevel][$this->tbctr[$this->tableLevel]]['trborder-top'][$this->row] = $properties['BORDER-TOP']; }
@@ -17819,18 +17817,6 @@ function OpenTag($tag,$attr)
 		)
 	);
 
-	if ($this->simpleTables && $this->row==0 && $this->col==0){
-		$table['simple']['border'] = false;
-		$table['simple']['border_details']['R']['w'] = 0;
-		$table['simple']['border_details']['L']['w'] = 0;
-		$table['simple']['border_details']['T']['w'] = 0;
-		$table['simple']['border_details']['B']['w'] = 0;
-		$table['simple']['border_details']['R']['style'] = '';
-		$table['simple']['border_details']['L']['style'] = '';
-		$table['simple']['border_details']['T']['style'] = '';
-		$table['simple']['border_details']['B']['style'] = '';
-	}
-	else if (!$this->simpleTables) {
 	$c['border'] = false;
 	$c['border_details']['R']['w'] = 0;
 	$c['border_details']['L']['w'] = 0;
@@ -17860,14 +17846,12 @@ function OpenTag($tag,$attr)
 	$c['border_details']['L']['dom'] = 0;
 	$c['border_details']['T']['dom'] = 0;
 	$c['border_details']['B']['dom'] = 0;
-	}
 
 
 	if ($table['va']) { $c['va'] = $table['va']; }
 	if ($table['txta']) { $c['a'] = $table['txta']; }
 	if ($this->table_border_attr_set) {
 	  if ($table['border_details']) {
-	    if (!$this->simpleTables){
 		$c['border_details']['R'] = $table['border_details']['R'];
 		$c['border_details']['L'] = $table['border_details']['L'];
 		$c['border_details']['T'] = $table['border_details']['T'];
@@ -17877,14 +17861,7 @@ function OpenTag($tag,$attr)
 		$c['border_details']['R']['dom'] = 1; 
 		$c['border_details']['T']['dom'] = 1; 
 		$c['border_details']['B']['dom'] = 1; 
-	    }
-	    else if ($this->simpleTables && $this->row==0 && $this->col==0){
-		$table['simple']['border_details']['R'] = $table['border_details']['R'];
-		$table['simple']['border_details']['L'] = $table['border_details']['L'];
-		$table['simple']['border_details']['T'] = $table['border_details']['T'];
-		$table['simple']['border_details']['B'] = $table['border_details']['B'];
-		$table['simple']['border'] = $table['border']; 
-	    }
+	    
 	  }
 	} 
 	// INHERITED THEAD CSS Properties
@@ -17962,7 +17939,6 @@ function OpenTag($tag,$attr)
 	if (isset($properties['BORDER'])) { 
 		$bord = $this->border_details($properties['BORDER']);
 		if ($bord['s']) {
-		   if (!$this->simpleTables){
 			$c['border'] = _BORDER_ALL;
 			$c['border_details']['R'] = $bord;
 			$c['border_details']['L'] = $bord;
@@ -17972,57 +17948,33 @@ function OpenTag($tag,$attr)
 			$c['border_details']['R']['dom'] = $this->cell_border_dominance_R; 
 			$c['border_details']['T']['dom'] = $this->cell_border_dominance_T; 
 			$c['border_details']['B']['dom'] = $this->cell_border_dominance_B; 
-		   }
-		   else if ($this->simpleTables && $this->row==0 && $this->col==0){
-			$table['simple']['border'] = _BORDER_ALL;
-			$table['simple']['border_details']['R'] = $bord;
-			$table['simple']['border_details']['L'] = $bord;
-			$table['simple']['border_details']['T'] = $bord;
-			$table['simple']['border_details']['B'] = $bord;
-		   }
+		   
 		}
 	}
-	if (!$this->simpleTables){
-	   if (isset($properties['BORDER-RIGHT']) && $properties['BORDER-RIGHT']) { 
-		$c['border_details']['R'] = $this->border_details($properties['BORDER-RIGHT']);
-		$this->setBorder($c['border'], _BORDER_RIGHT, $c['border_details']['R']['s']); 
-		$c['border_details']['R']['dom'] = $this->cell_border_dominance_R; 
-	   }
-	   if (isset($properties['BORDER-LEFT']) && $properties['BORDER-LEFT']) { 
-		$c['border_details']['L'] = $this->border_details($properties['BORDER-LEFT']);
-		$this->setBorder($c['border'], _BORDER_LEFT, $c['border_details']['L']['s']); 
-		$c['border_details']['L']['dom'] = $this->cell_border_dominance_L; 
-	   }
-	   if (isset($properties['BORDER-BOTTOM']) && $properties['BORDER-BOTTOM']) { 
-		$c['border_details']['B'] = $this->border_details($properties['BORDER-BOTTOM']);
-		$this->setBorder($c['border'], _BORDER_BOTTOM, $c['border_details']['B']['s']); 
-		$c['border_details']['B']['dom'] = $this->cell_border_dominance_B; 
-	   }
-	   if (isset($properties['BORDER-TOP']) && $properties['BORDER-TOP']) { 
-		$c['border_details']['T'] = $this->border_details($properties['BORDER-TOP']);
-		$this->setBorder($c['border'], _BORDER_TOP, $c['border_details']['T']['s']); 
-		$c['border_details']['T']['dom'] = $this->cell_border_dominance_T; 
-	   }
-	}
-	else if ($this->simpleTables && $this->row==0 && $this->col==0){
-	   if (isset($properties['BORDER-LEFT']) && $properties['BORDER-LEFT']) { 
-		$bord = $this->border_details($properties['BORDER-LEFT']);
-			if ($bord['s']) { $table['simple']['border'] = _BORDER_ALL; }
-			else { $table['simple']['border'] = 0; }
-			$table['simple']['border_details']['R'] = $bord;
-			$table['simple']['border_details']['L'] = $bord;
-			$table['simple']['border_details']['T'] = $bord;
-			$table['simple']['border_details']['B'] = $bord;
-	   }
-	}
+   if (isset($properties['BORDER-RIGHT']) && $properties['BORDER-RIGHT']) { 
+	$c['border_details']['R'] = $this->border_details($properties['BORDER-RIGHT']);
+	$this->setBorder($c['border'], _BORDER_RIGHT, $c['border_details']['R']['s']); 
+	$c['border_details']['R']['dom'] = $this->cell_border_dominance_R; 
+   }
+   if (isset($properties['BORDER-LEFT']) && $properties['BORDER-LEFT']) { 
+	$c['border_details']['L'] = $this->border_details($properties['BORDER-LEFT']);
+	$this->setBorder($c['border'], _BORDER_LEFT, $c['border_details']['L']['s']); 
+	$c['border_details']['L']['dom'] = $this->cell_border_dominance_L; 
+   }
+   if (isset($properties['BORDER-BOTTOM']) && $properties['BORDER-BOTTOM']) { 
+	$c['border_details']['B'] = $this->border_details($properties['BORDER-BOTTOM']);
+	$this->setBorder($c['border'], _BORDER_BOTTOM, $c['border_details']['B']['s']); 
+	$c['border_details']['B']['dom'] = $this->cell_border_dominance_B; 
+   }
+   if (isset($properties['BORDER-TOP']) && $properties['BORDER-TOP']) { 
+	$c['border_details']['T'] = $this->border_details($properties['BORDER-TOP']);
+	$this->setBorder($c['border'], _BORDER_TOP, $c['border_details']['T']['s']); 
+	$c['border_details']['T']['dom'] = $this->cell_border_dominance_T; 
+   }
 
-	if ($this->simpleTables && $this->row==0 && $this->col==0 && !$table['borders_separate'] && $table['simple']['border'] ){
-		$table['border_details'] = $table['simple']['border_details'];
-		$table['border'] = $table['simple']['border']; 
-	}
 
 	// Border set on TR (if collapsed only)
-	if (!$table['borders_separate'] && !$this->simpleTables && isset($table['trborder-left'][$this->row])) {
+	if (!$table['borders_separate']) {
 		if ($this->col==0) { 
 			$left = $this->border_details($table['trborder-left'][$this->row]);
 			$c['border_details']['L'] = $left;
@@ -18034,7 +17986,7 @@ function OpenTag($tag,$attr)
 		$this->setBorder($c['border'], _BORDER_TOP, $c['border_details']['T']['s']); 
 	}
 
-	if ($this->packTableData && !$this->simpleTables) {
+	if ($this->packTableData) {
 		$c['borderbin'] = $this->_packCellBorder($c);
 		unset($c['border']);
 		unset($c['border_details']);
@@ -19170,7 +19122,6 @@ function CloseTag($tag)
 
 
 			//$parentwidth -= ALLOW FOR PADDING ETC.in parent cell
-			if (!$this->simpleTables){
 			 if ($this->packTableData) {
 			 	list($bt,$br,$bb,$bl) = $this->_getBorderWidths($c['borderbin']);
 			 }
@@ -19189,22 +19140,7 @@ function CloseTag($tag)
 				+ $c['padding']['L']
 				+ $c['padding']['R'];
 			 }
-			}
-			else if ($this->simpleTables){
-			 if ($this->table[$lvl-1][$parentnid]['borders_separate']) {
-			  $parentwidth -= $this->table[($lvl-1)][$parentnid]['simple']['border_details']['L']['w']
-				+ $this->table[($lvl-1)][$parentnid]['simple']['border_details']['R']['w']
-				+ $c['padding']['L']
-				+ $c['padding']['R']
-				+ $this->table[($lvl-1)][$parentnid]['border_spacing_H'];
-			 }
-			 else {
-			  $parentwidth -= $this->table[($lvl-1)][$parentnid]['simple']['border_details']['L']['w']/2
-				+ $this->table[($lvl-1)][$parentnid]['simple']['border_details']['R']['w']/2
-				+ $c['padding']['L']
-				+ $c['padding']['R'];
-			 }
-			}
+			
 			if (isset($this->table[$lvl][$nid]['wpercent']) && $this->table[$lvl][$nid]['wpercent'] && $lvl>1) {
 				$this->table[$lvl][$nid]['w'] = $parentwidth;
 			}
@@ -19355,7 +19291,6 @@ function CloseTag($tag)
 				else { $parentwidth = $this->table[($lvl-1)][$parentnid]['wc'][$parentcol]; }
 
 				//$parentwidth -= ALLOW FOR PADDING ETC.in parent cell
-				if (!$this->simpleTables){
 				 if ($this->packTableData) {
 				 	list($bt,$br,$bb,$bl) = $this->_getBorderWidths($c['borderbin']);
 				 }
@@ -19374,22 +19309,6 @@ function CloseTag($tag)
 					+ $c['padding']['L']
 					+ $c['padding']['R'];
 				 }
-				}
-				else if ($this->simpleTables){
-				 if ($this->table[$lvl-1][$parentnid]['borders_separate']) {
-				  $parentwidth -= $this->table[($lvl-1)][$parentnid]['simple']['border_details']['L']['w']
-					+ $this->table[($lvl-1)][$parentnid]['simple']['border_details']['R']['w']
-					+ $c['padding']['L']
-					+ $c['padding']['R']
-					+ $this->table[($lvl-1)][$parentnid]['border_spacing_H'];
-				 }
-				 else {
-				  $parentwidth -= ($this->table[($lvl-1)][$parentnid]['simple']['border_details']['L']['w']
-					+ $this->table[($lvl-1)][$parentnid]['simple']['border_details']['R']['w']) /2
-					+ $c['padding']['L']
-					+ $c['padding']['R'];
-				 }
-				}
 				if (isset($this->table[$lvl][$nid]['wpercent']) && $this->table[$lvl][$nid]['wpercent'] && $lvl>1) {
 					$this->table[$lvl][$nid]['w'] = $parentwidth;
 				}
@@ -20277,28 +20196,18 @@ function printbuffer($arrayaux,$blockstate=0,$is_table=false,$is_list=false)
 			$ncx = $this->x;
 			list($dummyx,$w) = $this->_tableGetWidth($table, $objattr['row'], $objattr['col'], $fh);
 			$ntw = $this->table[($level+1)][$objattr['nestedcontent']]['w'];	// nested table width
-			if (!$this->simpleTables){
-				if ($this->packTableData) {
-			 	   	list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cell['borderbin']);
-				}
-				else { 
-					$br = $cell['border_details']['R']['w'];
-					$bl = $cell['border_details']['L']['w'];
-				}
-				if ($table['borders_separate']) { 
-					$innerw = $w - $bl - $br - $cell['padding']['L'] - $cell['padding']['R'] - $table['border_spacing_H'];
-				}
-				else {
-					$innerw = $w - $bl/2 - $br/2 - $cell['padding']['L'] - $cell['padding']['R'];
-				}
+			if ($this->packTableData) {
+				list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cell['borderbin']);
 			}
-			else if ($this->simpleTables){
-				if ($table['borders_separate']) { 
-					$innerw = $w - $table['simple']['border_details']['L']['w'] - $table['simple']['border_details']['R']['w'] - $cell['padding']['L'] - $cell['padding']['R'] - $table['border_spacing_H'];
-				}
-				else {
-					$innerw = $w - $table['simple']['border_details']['L']['w']/2 - $table['simple']['border_details']['R']['w']/2 - $cell['padding']['L'] - $cell['padding']['R'];
-				}
+			else { 
+				$br = $cell['border_details']['R']['w'];
+				$bl = $cell['border_details']['L']['w'];
+			}
+			if ($table['borders_separate']) { 
+				$innerw = $w - $bl - $br - $cell['padding']['L'] - $cell['padding']['R'] - $table['border_spacing_H'];
+			}
+			else {
+				$innerw = $w - $bl/2 - $br/2 - $cell['padding']['L'] - $cell['padding']['R'];
 			}
 			if ($cell['a']=='C' || $this->table[($level+1)][$objattr['nestedcontent']]['a']=='C') { 
 				$ncx += ($innerw-$ntw)/2; 
@@ -23245,13 +23154,6 @@ function shrinkTable(&$table,$k) {
 		if (isset($table['max_cell_border_width']['B'])) $table['max_cell_border_width']['B'] /= $k;
 		if (isset($table['max_cell_border_width']['L'])) $table['max_cell_border_width']['L'] /= $k;
 
-		if ($this->simpleTables){
-			$table['simple']['border_details']['T']['w'] /= $k;
-			$table['simple']['border_details']['R']['w'] /= $k;
-			$table['simple']['border_details']['B']['w'] /= $k;
-			$table['simple']['border_details']['L']['w'] /= $k;
-		}
-
 		$table['miw'] /= $k;
 		$table['maw'] /= $k;
 
@@ -23271,7 +23173,6 @@ function shrinkTable(&$table,$k) {
 			else 
 				$c = &$table['cells'][$i][$j];
 			if (isset($c) && $c)  {
-				if (!$this->simpleTables){
 				  if ($this->packTableData) {
 					$cell = $this->_unpackCellBorder($c['borderbin'] );
 					$cell['border_details']['T']['w'] /= $k;
@@ -23302,7 +23203,7 @@ function shrinkTable(&$table,$k) {
 					$c['border_details']['mbw']['RT'] /= $k;
 					$c['border_details']['mbw']['RB'] /= $k;
 				  }
-				}
+				
 				$c['padding']['T'] /= $k;
 				$c['padding']['R'] /= $k;
 				$c['padding']['B'] /= $k;
@@ -23668,16 +23569,7 @@ function _tableColumnWidth(&$table,$firstpass=false){
 				else 
 					$c = &$cs[$i][$j];
 
-				if ($this->simpleTables){
-					   if ($table['borders_separate']) {	// NB twice border width
-						$extrcw = $table['simple']['border_details']['L']['w'] + $table['simple']['border_details']['R']['w'] + $c['padding']['L'] + $c['padding']['R'] + $table['border_spacing_H'];
-					   }
-					   else {
-						$extrcw = $table['simple']['border_details']['L']['w']/2 + $table['simple']['border_details']['R']['w']/2 + $c['padding']['L'] + $c['padding']['R'];
-					   }
-				}
-				else {
-			 	   if ($this->packTableData) {
+				if ($this->packTableData) {
 			 	   	list($bt,$br,$bb,$bl) = $this->_getBorderWidths($c['borderbin']);
 			 	   }
 			 	   else { 
@@ -23690,7 +23582,6 @@ function _tableColumnWidth(&$table,$firstpass=false){
 				   else {
 					$extrcw = $bl/2 + $br/2 + $c['padding']['L'] + $c['padding']['R'];
 				   }
-				}
 
 				//$mw = $this->GetStringWidth('W') + $extrcw ;
 				$mw = 0;
@@ -24312,35 +24203,24 @@ function _tableHeight(&$table){
 				else 
 					$c = &$cells[$i][$j];
 
-				if ($this->simpleTables){
-				   if ($table['borders_separate']) {	// NB twice border width
-					$extraWLR = ($table['simple']['border_details']['L']['w']+$table['simple']['border_details']['R']['w']) + ($c['padding']['L']+$c['padding']['R'])+$table['border_spacing_H'];
-					$extrh = ($table['simple']['border_details']['T']['w']+$table['simple']['border_details']['B']['w']) + ($c['padding']['T']+$c['padding']['B'])+$table['border_spacing_V'];
-				   }
-				   else {
-					$extraWLR = ($table['simple']['border_details']['L']['w']+$table['simple']['border_details']['R']['w'])/2 + ($c['padding']['L']+$c['padding']['R']);
-					$extrh = ($table['simple']['border_details']['T']['w']+$table['simple']['border_details']['B']['w'])/2 + ($c['padding']['T']+$c['padding']['B']);
-				   }
-				}
-				else  {
-			 	   if ($this->packTableData) {
-			 	   	list($bt,$br,$bb,$bl) = $this->_getBorderWidths($c['borderbin']);
-			 	   }
-			 	   else { 
-					$bt = $c['border_details']['T']['w'];
-					$bb = $c['border_details']['B']['w'];
-					$br = $c['border_details']['R']['w'];
-					$bl = $c['border_details']['L']['w'];
-				   }
-				   if ($table['borders_separate']) {	// NB twice border width
-					$extraWLR = $bl + $br + $c['padding']['L'] + $c['padding']['R'] + $table['border_spacing_H'];
-					$extrh = $bt + $bb + $c['padding']['T'] + $c['padding']['B'] + $table['border_spacing_V'];
-				   }
-				   else {
-					$extraWLR = $bl/2 + $br/2 + $c['padding']['L'] + $c['padding']['R'];
-					$extrh = $bt/2 + $bb/2 + $c['padding']['T']+$c['padding']['B'];
-				   }
-				}
+			   if ($this->packTableData) {
+				list($bt,$br,$bb,$bl) = $this->_getBorderWidths($c['borderbin']);
+			   }
+			   else { 
+				$bt = $c['border_details']['T']['w'];
+				$bb = $c['border_details']['B']['w'];
+				$br = $c['border_details']['R']['w'];
+				$bl = $c['border_details']['L']['w'];
+			   }
+			   if ($table['borders_separate']) {	// NB twice border width
+				$extraWLR = $bl + $br + $c['padding']['L'] + $c['padding']['R'] + $table['border_spacing_H'];
+				$extrh = $bt + $bb + $c['padding']['T'] + $c['padding']['B'] + $table['border_spacing_V'];
+			   }
+			   else {
+				$extraWLR = $bl/2 + $br/2 + $c['padding']['L'] + $c['padding']['R'];
+				$extrh = $bt/2 + $bb/2 + $c['padding']['T']+$c['padding']['B'];
+			   }
+			
 
 				if ($table['overflow']=='visible' && $level==1) 
 					list($x,$cw) = $this->_splitTableGetWidth($table, $i,$j, $fh);
@@ -24395,12 +24275,8 @@ function _tableHeight(&$table){
 				  }
 				}
 	  			else { 
-					if (!$this->simpleTables){
-						$extra = $bb/2; 
-					}
-					else if ($this->simpleTables){
-						$extra = $table['simple']['border_details']['B']['w'] /2; 
-					}
+					$extra = $bb/2; 
+					
 				}
 				if (isset($table['is_thead'][$i]) && $table['is_thead'][$i]) {
 				   if ($j==0) {
@@ -24453,18 +24329,14 @@ function _tableHeight(&$table){
 		  }
 		}
 	  	else { 
-			if (!$this->simpleTables){
-			 	if ($this->packTableData) {
-			 		list($bt,$br,$bb,$bl) = $this->_getBorderWidths($c['borderbin']);
-			 	}
-			 	else { 
-					$bb = $c['border_details']['B']['w'];
-				}
-				$extra = $bb/2; 
+			if ($this->packTableData) {
+				list($bt,$br,$bb,$bl) = $this->_getBorderWidths($c['borderbin']);
 			}
-			else if ($this->simpleTables){
-				$extra = $table['simple']['border_details']['B']['w'] /2; 
+			else { 
+				$bb = $c['border_details']['B']['w'];
 			}
+			$extra = $bb/2; 
+			
 		}
 		if (!empty($table['is_thead'][$i])) {
 			$headerrowheight = max($headerrowheight,$hs);
@@ -24704,15 +24576,6 @@ function _tableRect($x, $y, $w, $h, $bord=-1, $details=array(), $buffer=false, $
 	$cellBorderOverlay = array();
 
 	if ($bord==-1) { $this->Rect($x, $y, $w, $h); }
-	else if ($this->simpleTables && ($cort=='cell')) {
-		$this->SetLineWidth($details['L']['w']);
-		if ($details['L']['c']) { 
-			$this->SetDColor($details['L']['c']);
-		}
-		else { $this->SetDColor($this->ConvertColor(0)); }
-		$this->SetLineJoin(0);
-		$this->Rect($x, $y, $w, $h); 
-	}
 	else if ($bord){
 	   if (!$bSeparate && $buffer) {
 		$priority = 'LRTB';
@@ -25218,7 +25081,6 @@ function _fixTableBorders(&$table){
 	if (!$table['borders_separate'] && $table['border_details']['B']['w']) {
 		$table['max_cell_border_width']['B'] = $table['border_details']['B']['w']; 
 	}
-	if ($this->simpleTables) { return; }
 	$cells = &$table['cells'];
 	$numcols = $table['nc'];
 	$numrows = $table['nr'];
@@ -25835,21 +25697,16 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 				$tablefooter[$i][$js]['gradient'] = $cell['gradient'];	// *BACKGROUNDS*
 				$tablefooter[$i][$js]['background-image'] = $cell['background-image'];	// *BACKGROUNDS*
 				//CELL FILL BGCOLOR
-				if (!$this->simpleTables){
-			 		if ($this->packTableData) {
-						$c = $this->_unpackCellBorder($cell['borderbin']);
-						$tablefooter[$i][$js]['border'] = $c['border'];
-						$tablefooter[$i][$js]['border_details'] = $c['border_details'];
-					}
-			 		else {
-						$tablefooter[$i][$js]['border'] = $cell['border'];
-						$tablefooter[$i][$js]['border_details'] = $cell['border_details'];
-					}
+				if ($this->packTableData) {
+					$c = $this->_unpackCellBorder($cell['borderbin']);
+					$tablefooter[$i][$js]['border'] = $c['border'];
+					$tablefooter[$i][$js]['border_details'] = $c['border_details'];
 				}
-				else if ($this->simpleTables){
-					$tablefooter[$i][$js]['border'] = $table['simple']['border'];
-					$tablefooter[$i][$js]['border_details'] = $table['simple']['border_details'];
+				else {
+					$tablefooter[$i][$js]['border'] = $cell['border'];
+					$tablefooter[$i][$js]['border_details'] = $cell['border_details'];
 				}
+			
 				$tablefooter[$i][$js]['bgcolor'] = $cell['bgcolor'];
 				$tablefooter[$i][$js]['padding'] = $cell['padding'];
 				$tablefooter[$i][$js]['rowspan'] = $cell['rowspan'];
@@ -25957,50 +25814,45 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 							else { 
 								$maxbwtop = 0;
 								$maxbwbottom = 0;
-								if (!$this->simpleTables){
-									if (!empty($tablefooter)) { $maxbwbottom = $table['max_cell_border_width']['B']; }
-									else { 
-									   $brow = $i-1; 
-									   for( $ctj = 0 ; $ctj < $numcols ; $ctj++ ) {
-										if (isset($cells[$brow][$ctj]) && $cells[$brow][$ctj]) {
-											if ($this->cacheTables) {
-												$cadj = $this->_uncacheCell($table['cells'][$brow][$ctj], '', $fh);
-			 	   								list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cadj['borderbin']);
-											}
-											else if ($this->packTableData) {
-			 	   								list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cells[$brow][$ctj]['borderbin']);
-											}
-											else {
-												$bb = $cells[$brow][$ctj]['border_details']['B']['w'];
-											}
-											$maxbwbottom = max($maxbwbottom , $bb); 
+								if (!empty($tablefooter)) { $maxbwbottom = $table['max_cell_border_width']['B']; }
+								else { 
+								   $brow = $i-1; 
+								   for( $ctj = 0 ; $ctj < $numcols ; $ctj++ ) {
+									if (isset($cells[$brow][$ctj]) && $cells[$brow][$ctj]) {
+										if ($this->cacheTables) {
+											$cadj = $this->_uncacheCell($table['cells'][$brow][$ctj], '', $fh);
+											list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cadj['borderbin']);
 										}
-									   }
-									}
-									if (!empty($tableheader)) { $maxbwtop = $table['max_cell_border_width']['T']; }
-									else { 
-									   $trow = $i-1; 
-									   for( $ctj = 0 ; $ctj < $numcols ; $ctj++ ) {
-										if (isset($cells[$trow][$ctj]) && $cells[$trow][$ctj]) {
-											if ($this->cacheTables) {
-												$cadj = $this->_uncacheCell($table['cells'][$trow][$ctj], '', $fh);
-			 	   								list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cadj['borderbin']);
-											}
-											else if ($this->packTableData) {
-			 	   								list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cells[$trow][$ctj]['borderbin']);
-											}
-											else {
-												$bt = $cells[$trow][$ctj]['border_details']['T']['w'];
-											}
-											$maxbwtop = max($maxbwtop , $bt);
+										else if ($this->packTableData) {
+											list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cells[$brow][$ctj]['borderbin']);
 										}
-									   }
+										else {
+											$bb = $cells[$brow][$ctj]['border_details']['B']['w'];
+										}
+										$maxbwbottom = max($maxbwbottom , $bb); 
 									}
+								   }
 								}
-								else if ($this->simpleTables){
-									$maxbwtop = $table['simple']['border_details']['T']['w'];
-									$maxbwbottom = $table['simple']['border_details']['B']['w']; 
+								if (!empty($tableheader)) { $maxbwtop = $table['max_cell_border_width']['T']; }
+								else { 
+								   $trow = $i-1; 
+								   for( $ctj = 0 ; $ctj < $numcols ; $ctj++ ) {
+									if (isset($cells[$trow][$ctj]) && $cells[$trow][$ctj]) {
+										if ($this->cacheTables) {
+											$cadj = $this->_uncacheCell($table['cells'][$trow][$ctj], '', $fh);
+											list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cadj['borderbin']);
+										}
+										else if ($this->packTableData) {
+											list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cells[$trow][$ctj]['borderbin']);
+										}
+										else {
+											$bt = $cells[$trow][$ctj]['border_details']['T']['w'];
+										}
+										$maxbwtop = max($maxbwtop , $bt);
+									}
+								   }
 								}
+							
 								$adv = $maxbwbottom /2;
 							}
 							$this->y += $adv;
@@ -26183,22 +26035,17 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 								$maxbwtop = 0;
 								for( $ctj = 0 ; $ctj < $numcols ; $ctj++ ) {
 									if (isset($cells[$i][$ctj]) && $cells[$i][$ctj]) {
-										if (!$this->simpleTables){
-											if ($this->cacheTables) {
-												$celltj = $this->_uncacheCell($table['cells'][$i][$ctj], '', $fh);
-			 	   								list($bt,$br,$bb,$bl) = $this->_getBorderWidths($celltj['borderbin']);
-											}
-			 								else if ($this->packTableData) {
-			 	   								list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cells[$i][$ctj]['borderbin']);
-											}
-											else {
-												$bt = $cells[$i][$ctj]['border_details']['T']['w'];
-											}
-											$maxbwtop = max($maxbwtop, $bt); 
+										if ($this->cacheTables) {
+											$celltj = $this->_uncacheCell($table['cells'][$i][$ctj], '', $fh);
+											list($bt,$br,$bb,$bl) = $this->_getBorderWidths($celltj['borderbin']);
 										}
-										else if ($this->simpleTables){
-											$maxbwtop = max($maxbwtop, $table['simple']['border_details']['T']['w']); 
+										else if ($this->packTableData) {
+											list($bt,$br,$bb,$bl) = $this->_getBorderWidths($cells[$i][$ctj]['borderbin']);
 										}
+										else {
+											$bt = $cells[$i][$ctj]['border_details']['T']['w'];
+										}
+										$maxbwtop = max($maxbwtop, $bt); 
 									}
 								}
 								$adv = $maxbwtop /2;
@@ -26388,25 +26235,18 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 			$bord = 0; 
 			$bord_det = array();
 
-			if (!$this->simpleTables){
-			 	if ($this->packTableData) {
-	  			   if ($cell['borderbin']) {
-					$c = $this->_unpackCellBorder($cell['borderbin']);
-					$bord = $c['border'];
-					$bord_det = $c['border_details'];
-				   }
-				}
-				else if ($cell['border']) {
-					$bord = $cell['border'];
-					$bord_det = $cell['border_details'];
-				}
+			if ($this->packTableData) {
+			   if ($cell['borderbin']) {
+				$c = $this->_unpackCellBorder($cell['borderbin']);
+				$bord = $c['border'];
+				$bord_det = $c['border_details'];
+			   }
 			}
-			else if ($this->simpleTables){
-	  			if ($table['simple']['border']) {
-					$bord = $table['simple']['border'];
-					$bord_det = $table['simple']['border_details'];
-				}
+			else if ($cell['border']) {
+				$bord = $cell['border'];
+				$bord_det = $cell['border_details'];
 			}
+			
 
 			//TABLE ROW OR CELL FILL BGCOLOR
 			$fill = 0;
@@ -26536,7 +26376,7 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 
 
 			// but still need to do this for repeated headers...
-			if (!$table['borders_separate'] && $this->tabletheadjustfinished && !$this->simpleTables){
+			if (!$table['borders_separate'] && $this->tabletheadjustfinished){
 			  if (isset($table['topntail']) && $table['topntail']) {
 					$bord_det['T'] = $this->border_details($table['topntail']);
 					$bord_det['T']['w'] /= $this->shrin_k;
@@ -26574,14 +26414,9 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 				$tableheader[$i][$j]['colspan'] = (isset($cell['colspan']) ? $cell['colspan'] : null);
 				$tableheader[$i][$j]['bgcolor'] = $cell['bgcolor'];
 
-				if (!$this->simpleTables){
-					$tableheader[$i][$j]['border'] = $bord;
-					$tableheader[$i][$j]['border_details'] = $bord_det;
-				}
-				else if ($this->simpleTables){
-					$tableheader[$i][$j]['border'] = $table['simple']['border'];
-					$tableheader[$i][$j]['border_details'] = $table['simple']['border_details'];
-				}
+				$tableheader[$i][$j]['border'] = $bord;
+				$tableheader[$i][$j]['border_details'] = $bord_det;
+				
 				$tableheader[$i][$j]['padding'] = $cell['padding'];
 			}
 
@@ -26688,40 +26523,28 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 				}
 				else {
 
-					if (!$this->simpleTables){
-					   if ($bord_det) { 
-						$btlw = $bord_det['L']['w']; 
-						$btrw = $bord_det['R']['w']; 
-						$bttw = $bord_det['T']['w']; 
-					   }
-					   else { 
-						$btlw = 0; 
-						$btrw = 0; 
-						$bttw = 0; 
-					   }
-					   if ($table['borders_separate']) {
-						$xadj = $btlw + $cell['padding']['L'] +($table['border_spacing_H']/2);
-						$wadj = $btlw + $btrw + $cell['padding']['L'] +$cell['padding']['R'] + $table['border_spacing_H'];
-						$yadj = $bttw + $cell['padding']['T'] + ($table['border_spacing_H']/2);
-					   }
-					   else {
-						$xadj = $btlw/2 + $cell['padding']['L'];
-						$wadj = ($btlw + $btrw)/2 + $cell['padding']['L'] + $cell['padding']['R'];
-						$yadj = $bttw/2 + $cell['padding']['T'];
-					   }
-					}
-					else if ($this->simpleTables){
-					   if ($table['borders_separate']) {	// NB twice border width
-						$xadj = $table['simple']['border_details']['L']['w'] + $cell['padding']['L'] +($table['border_spacing_H']/2);
-						$wadj = $table['simple']['border_details']['L']['w'] + $table['simple']['border_details']['R']['w'] + $cell['padding']['L'] +$cell['padding']['R'] + $table['border_spacing_H'];
-						$yadj = $table['simple']['border_details']['T']['w'] + $cell['padding']['T'] + ($table['border_spacing_H']/2);
-					   }
-					   else {
-						$xadj = $table['simple']['border_details']['L']['w']/2 + $cell['padding']['L'];
-						$wadj = ($table['simple']['border_details']['L']['w'] + $table['simple']['border_details']['R']['w'])/2 + $cell['padding']['L'] + $cell['padding']['R'];
-						$yadj = $table['simple']['border_details']['T']['w']/2 + $cell['padding']['T'];
-					   }
-					}
+					
+				   if ($bord_det) { 
+					$btlw = $bord_det['L']['w']; 
+					$btrw = $bord_det['R']['w']; 
+					$bttw = $bord_det['T']['w']; 
+				   }
+				   else { 
+					$btlw = 0; 
+					$btrw = 0; 
+					$bttw = 0; 
+				   }
+				   if ($table['borders_separate']) {
+					$xadj = $btlw + $cell['padding']['L'] +($table['border_spacing_H']/2);
+					$wadj = $btlw + $btrw + $cell['padding']['L'] +$cell['padding']['R'] + $table['border_spacing_H'];
+					$yadj = $bttw + $cell['padding']['T'] + ($table['border_spacing_H']/2);
+				   }
+				   else {
+					$xadj = $btlw/2 + $cell['padding']['L'];
+					$wadj = ($btlw + $btrw)/2 + $cell['padding']['L'] + $cell['padding']['R'];
+					$yadj = $bttw/2 + $cell['padding']['T'];
+				   }
+				
 
 					$this->divwidth=$w-$wadj;
 					if ($this->divwidth == 0) { $this->divwidth = 0.0001; }
@@ -26836,7 +26659,7 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 /*-- END BACKGROUNDS --*/
 
 			// TABLE BORDER - if separate
-			if (($table['borders_separate'] || ($this->simpleTables && !$table['simple']['border'])) && $table['border']) { 
+			if ($table['borders_separate']) { 
 			   $halfspaceL = $table['padding']['L'] + ($table['border_spacing_H']/2);
 			   $halfspaceR = $table['padding']['R'] + ($table['border_spacing_H']/2);
 			   $halfspaceT = $table['padding']['T'] + ($table['border_spacing_V']/2);
