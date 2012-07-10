@@ -132,7 +132,6 @@ var $autoMarginPadding;
 var $collapseBlockMargins;
 var $falseBoldWeight;
 var $normalLineheight;
-var $progressBar;
 var $incrementFPR1;
 var $incrementFPR2;
 var $incrementFPR3;
@@ -1294,7 +1293,6 @@ function mPDF($mode='',$format='A4',$default_font_size=0,$default_font='',$mgl=1
 	}
 /*-- END IMPORTS --*/
 
-	if ($this->progressBar) { $this->StartProgressBarOutput($this->progressBar) ;	}	// *PROGRESS-BAR*
 }
 
 
@@ -1343,115 +1341,6 @@ function _setPageSize($format, &$orientation) {
 	$this->w=$this->wPt/_MPDFK;
 	$this->h=$this->hPt/_MPDFK;
 }
-
-
-
-/*-- PROGRESS-BAR --*/
-function StartProgressBarOutput($mode=1) {
-	// must be relative path, or URI (not a file system path)
-	if (!defined('_MPDF_URI')) { 
-		$this->progressBar = false;
-		if ($this->debug) { $this->Error("You need to define _MPDF_URI to use the progress bar!"); }
-		else return false; 
-	}
-	$this->progressBar = $mode;
-	if ($this->progbar_altHTML) {
-		echo $this->progbar_altHTML;
-	}
-	else {
-	   echo '<html>
-	<head>
-	<title>mPDF File Progress</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<link rel="stylesheet" type="text/css" href="'._MPDF_URI.'progbar.css" />
-		</head>
-	<body>
-	<div class="main">
-		<div class="heading">'.$this->progbar_heading.'</div>
-		<div class="demo">
-	   ';
-	   if ($this->progressBar==2) { echo '		<table width="100%"><tr><td style="width: 50%;"> 
-			<span class="barheading">Writing HTML code</span> <br/>
-
-			<div class="progressBar">
-			<div id="element1"  class="innerBar">&nbsp;</div>
-			</div>
-			<span class="code" id="box1"></span>
-			</td><td style="width: 50%;">
-			<span class="barheading">Autosizing elements</span> <br/>
-			<div class="progressBar">
-			<div id="element4"  class="innerBar">&nbsp;</div>
-			</div>
-			<span class="code" id="box4"></span>
-			<br/><br/>
-			<span class="barheading">Writing Tables</span> <br/>
-			<div class="progressBar">
-			<div id="element7"  class="innerBar">&nbsp;</div>
-			</div>
-			<span class="code" id="box7"></span>
-			</td></tr>
-			<tr><td><br /><br /></td><td></td></tr>
-			<tr><td style="width: 50%;"> 
-	'; }
-	echo '			<span class="barheading">Writing PDF file</span> <br/>
-			<div class="progressBar">
-			<div id="element2"  class="innerBar">&nbsp;</div>
-			</div>
-			<span class="code" id="box2"></span>
-	   ';
-	   if ($this->progressBar==2) { echo '
-			</td><td style="width: 50%;">
-			<span class="barheading">Memory usage</span> <br/>
-			<div class="progressBar">
-			<div id="element5"  class="innerBar">&nbsp;</div>
-			</div>
-			<span id="box5">0</span> '.ini_get("memory_limit").'<br />
-			<br/><br/>
-			<span class="barheading">Memory usage (peak)</span> <br/>
-			<div class="progressBar">
-			<div id="element6"  class="innerBar">&nbsp;</div>
-			</div>
-			<span id="box6">0</span> '.ini_get("memory_limit").'<br />
-			</td></tr>
-			</table>
-	   '; }
-	   echo '			<br/><br/>
-		<span id="box3"></span>
-
-		</div>
-	   ';
-	}
-	ob_flush();
-      flush();
-}
-
-function UpdateProgressBar($el,$val,$txt='') {
-	// $val should be a string - 5 = actual value, +15 = increment
-
-	if ($this->progressBar<2) {
-		if ($el>3) { return; }
-		else if ($el ==1) { $el = 2; }
-	}
-	echo '<script type="text/javascript">';
-	if ($val) { echo ' document.getElementById(\'element'.$el.'\').style.width=\''.$val.'%\'; '; }
-	if ($txt) { echo ' document.getElementById(\'box'.$el.'\').innerHTML=\''.$txt.'\'; '; }
-	if ($this->progressBar==2) { 
-		$m = round(memory_get_usage(true)/1048576);
-		$m2 = round(memory_get_peak_usage(true)/1048576);
-		$mem = $m * 100 / (ini_get("memory_limit")+0);
-		$mem2 = $m2 * 100 / (ini_get("memory_limit")+0);
-		echo ' document.getElementById(\'element5\').style.width=\''.$mem.'%\'; '; 
-		echo ' document.getElementById(\'element6\').style.width=\''.$mem2.'%\'; '; 
-		echo ' document.getElementById(\'box5\').innerHTML=\''.$m.'MB / \'; '; 
-		echo ' document.getElementById(\'box6\').innerHTML=\''.$m2.'MB / \'; '; 
-	}
-	echo '</script>'."\n";
-	ob_flush();
-	flush();
-}
-/*-- END PROGRESS-BAR --*/
-
-
 
 function RestrictUnicodeFonts($res) {
 	// $res = array of (Unicode) fonts to restrict to: e.g. norasi|norasiB - language specific
@@ -1658,7 +1547,6 @@ function Open() {
 }
 
 function Close() {
-	if ($this->progressBar) { $this->UpdateProgressBar(2,'2','Closing last page'); }	// *PROGRESS-BAR*
 	//Terminate document
 	if($this->state==3)	return;
 	if($this->page==0) $this->AddPage($this->CurOrientation);
@@ -6800,9 +6688,7 @@ function Output($name='',$dest='')
 		echo '<div>Generated in '.sprintf('%.2F',(microtime(true) - $this->time0)).' seconds</div>';
 	}
 	//Finish document if necessary
-	if ($this->progressBar) { $this->UpdateProgressBar(1,'100','Finished'); }	// *PROGRESS-BAR*
 	if($this->state < 3) $this->Close();
-	if ($this->progressBar) { $this->UpdateProgressBar(2,'100','Finished'); }	// *PROGRESS-BAR*
 	// fn. error_get_last is only in PHP>=5.2
 	if ($this->debug && function_exists('error_get_last') && error_get_last()) {
 	   $e = error_get_last(); 
@@ -6855,60 +6741,6 @@ function Output($name='',$dest='')
 		}
 		else { $dest='F'; }
 	}
-
-/*-- PROGRESS-BAR --*/
-	if ($this->progressBar && ($dest=='D' || $dest=='I')) {
-		if($name=='') { $name='mpdf.pdf'; }
-		$tempfile = '_tempPDF'.RAND(1,10000);
-		//Save to local file
-		$f=fopen(_MPDF_TEMP_PATH.$tempfile.'.pdf','wb');
-		if(!$f) $this->Error('Unable to create temporary output file: '.$tempfile.'.pdf');
-		fwrite($f,$this->buffer,strlen($this->buffer));
-		fclose($f);
-		$this->UpdateProgressBar(3,'','Finished');
-
-		echo '<script type="text/javascript">
-
-		var form = document.createElement("form");
-		form.setAttribute("method", "post");
-		form.setAttribute("action", "'._MPDF_URI.'includes/out.php");
-
-		var hiddenField = document.createElement("input");
-		hiddenField.setAttribute("type", "hidden");
-		hiddenField.setAttribute("name", "filename");
-		hiddenField.setAttribute("value", "'.$tempfile.'");
-		form.appendChild(hiddenField);
-
-		var hiddenField = document.createElement("input");
-		hiddenField.setAttribute("type", "hidden");
-		hiddenField.setAttribute("name", "dest");
-		hiddenField.setAttribute("value", "'.$dest.'");
-		form.appendChild(hiddenField);
-
-		var hiddenField = document.createElement("input");
-		hiddenField.setAttribute("type", "hidden");
-		hiddenField.setAttribute("name", "opname");
-		hiddenField.setAttribute("value", "'.$name.'");
-		form.appendChild(hiddenField);
-
-		var hiddenField = document.createElement("input");
-		hiddenField.setAttribute("type", "hidden");
-		hiddenField.setAttribute("name", "path");
-		hiddenField.setAttribute("value", "'.urlencode(_MPDF_TEMP_PATH).'");
-		form.appendChild(hiddenField);
-
-		document.body.appendChild(form); 
-		form.submit();
-
-      	</script>
-		</div>
-		</body>
-		</html>';
-		exit;
-	}
-	else {
-		if ($this->progressBar) { $this->UpdateProgressBar(3,'','Finished'); }
-/*-- END PROGRESS-BAR --*/
 
 		switch($dest) {
 		   case 'I':
@@ -7793,7 +7625,6 @@ function _putfonts() {
 		$type=$font['type'];
 		$name=$font['name'];
 		if ((!isset($font['used']) || !$font['used']) && $type=='TTF') { continue; }
-		if ($this->progressBar) { $this->UpdateProgressBar(2,intval($fctr*100/$nfonts),'Writing Fonts'); $fctr++; }	// *PROGRESS-BAR*
 		if (isset($font['asSubset'])) { $asSubset = $font['asSubset']; }
 		else { $asSubset = ''; }
 /*-- CJK-FONTS --*/
@@ -8618,9 +8449,7 @@ function _putcatalog() {
 }
 
 function _enddoc() {
-	if ($this->progressBar) { $this->UpdateProgressBar(2,'10','Writing Headers & Footers'); }	// *PROGRESS-BAR*
 	$this->_puthtmlheaders();	// *HTMLHEADERS-FOOTERS*
-	if ($this->progressBar) { $this->UpdateProgressBar(2,'20','Writing Pages'); }	// *PROGRESS-BAR*
 	// Remove references to unused fonts (usually default font)
 	foreach($this->fonts as $fk=>$font) {
 	   if (!$font['used'] && ($font['type']=='TTF')) { 
@@ -8640,14 +8469,12 @@ function _enddoc() {
 	}
 
 	$this->_putpages();
-	if ($this->progressBar) { $this->UpdateProgressBar(2,'30','Writing document resources'); }	// *PROGRESS-BAR*
-
+	
 	$this->_putresources();
 	//Info
 	$this->_newobj();
 	$this->InfoRoot = $this->n;
 	$this->_out('<<');
-	if ($this->progressBar) { $this->UpdateProgressBar(2,'80','Writing document info'); }	// *PROGRESS-BAR*
 	$this->_putinfo();
 	$this->_out('>>');
 	$this->_out('endobj');
@@ -8660,7 +8487,6 @@ function _enddoc() {
 	//Catalog
 	$this->_newobj();
 	$this->_out('<<');
-	if ($this->progressBar) { $this->UpdateProgressBar(2,'90','Writing document catalog'); }	// *PROGRESS-BAR*
 	$this->_putcatalog();
 	$this->_out('>>');
 	$this->_out('endobj');
@@ -12130,8 +11956,7 @@ function WriteHTML($html,$sub=0,$init=true,$close=true) {
 				// $init - Clears and sets buffers to Top level block etc.
 
 	if (empty($html)) { $html = ''; }
-	if ($this->progressBar) { $this->UpdateProgressBar(1,0,'Parsing CSS & Headers'); }	// *PROGRESS-BAR*
-
+	
 	if ($init) {
 		$this->headerbuffer='';
 		$this->textbuffer = array();
@@ -12334,7 +12159,6 @@ function WriteHTML($html,$sub=0,$init=true,$close=true) {
 		mb_internal_encoding($this->mb_enc); 
 	}
 	$pbc = 0;
-	if ($this->progressBar) { $this->UpdateProgressBar(1,0); }	// *PROGRESS-BAR*
 	$this->subPos = -1;
 	$cnt = count($a);
 	for($i=0;$i<$cnt; $i++) {
@@ -12472,12 +12296,6 @@ function WriteHTML($html,$sub=0,$init=true,$close=true) {
 		else { // TAG **
 		   
 		   if($e[0]=='/') {
-/*-- PROGRESS-BAR --*/
-			if ($this->progressBar) { 	// 10% increments
-				if (intval($i*10/$cnt) != $pbc) { $pbc = intval($i*10/$cnt); $this->UpdateProgressBar(1,$pbc*10,$tag); }
-			}
-/*-- END PROGRESS-BAR --*/
-
 
 		    // Check for tags where HTML specifies optional end tags,
     		    // and/or does not allow nesting e.g. P inside P, or 
@@ -13123,8 +12941,6 @@ function WriteFixedPosHTML($html='',$x, $y, $w, $h, $overflow='visible', $boundi
 		$bpcctr = 1;
 		while(($ratio / $target ) > 1) {
 
-			if ($this->progressBar) { $this->UpdateProgressBar(4,intval(100/($ratio/$target)),('Auto-sizing fixed-position block: '.$bpcctr++)); }	// *PROGRESS-BAR*
-
 			$this->x = $x;
 			$this->y = $y;
 
@@ -13152,7 +12968,6 @@ function WriteFixedPosHTML($html='',$x, $y, $w, $h, $overflow='visible', $boundi
 			$actual_h = $this->y - $y;
 			$ratio = $actual_h / $use_w;
 		}
-		if ($this->progressBar) { $this->UpdateProgressBar(4,'100',' '); }	// *PROGRESS-BAR*
 	}
 	$shrink_f = $w/$use_w;
 
@@ -16882,7 +16697,6 @@ function OpenTag($tag,$attr)
 	// *********** IMAGE  ********************
 /*-- IMAGES-CORE --*/
     case 'IMG':
-	if ($this->progressBar) { $this->UpdateProgressBar(1,'','IMG'); }	// *PROGRESS-BAR*
 	$objattr = array();
 		$objattr['margin_top'] = 0;
 		$objattr['margin_bottom'] = 0;
@@ -18873,8 +18687,6 @@ function CloseTag($tag)
     }
 
     if($tag=='TABLE') { // TABLE-END (
-	if ($this->progressBar) { $this->UpdateProgressBar(1,'','TABLE'); }	// *PROGRESS-BAR*
-	if ($this->progressBar) { $this->UpdateProgressBar(7,0,''); }	// *PROGRESS-BAR*
 	$this->lastoptionaltag = '';
 	unset($this->tablecascadeCSS[$this->tbCSSlvl]);
 	$this->tbCSSlvl--;
@@ -18944,8 +18756,6 @@ function CloseTag($tag)
 
 	// Fix Borders *********************************************
 	$this->_fixTableBorders($this->table[$this->tableLevel][$this->tbctr[$this->tableLevel]]);
-
-	if ($this->progressBar) { $this->UpdateProgressBar(7,10,' '); }	// *PROGRESS-BAR*
 
 	if ($this->ColActive) { $this->table_rotate = 0; }	// *COLUMNS*
 	if ($this->table_rotate <> 0) {
@@ -19142,7 +18952,6 @@ function CloseTag($tag)
 		for ($nid=1; $nid<=$this->tbctr[$lvl]; $nid++) {
 			list($tableheight,$maxrowheight,$fullpage,$remainingpage, $maxfirstrowheight) = $this->_tableHeight($this->table[$lvl][$nid]);			}
 	}
-	if ($this->progressBar) { $this->UpdateProgressBar(7,20,' '); }	// *PROGRESS-BAR*
 	if ($this->table[1][1]['overflow']=='visible') {
 		if ($maxrowheight > $fullpage) { die("mPDF Warning: A Table row is greater than available height. You cannot use CSS overflow:visible"); }
 		if ($maxfirstrowheight > $remainingpage) { $this->AddPage($this->CurOrientation); }
@@ -19384,7 +19193,6 @@ function CloseTag($tag)
 		$this->kwt_saved = false;
 	  }
 
-	  if ($this->progressBar) { $this->UpdateProgressBar(7,30,' '); }	// *PROGRESS-BAR*
 	  // Recursively writes all tables starting at top level
 	  $this->_tableWrite($this->table[1][1]);
 
@@ -19464,8 +19272,7 @@ function CloseTag($tag)
 	$this->SetFont($this->default_font,'',0,false);
 	$this->SetLineHeight();
 	if (isset($this->blk[$this->blklvl]['InlineProperties'])) { $this->restoreInlineProperties($this->blk[$this->blklvl]['InlineProperties']);}
-	if ($this->progressBar) { $this->UpdateProgressBar(7,100,' '); }	// *PROGRESS-BAR*
-
+	
 	if ($page_break_after) {
 		$save_blklvl = $this->blklvl;
 		$save_blk = $this->blk;
@@ -25638,7 +25445,6 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 
 	$y = $h = 0;
 	for( $i = 0; $i < $numrows ; $i++ ) { //Rows
-	  if ($this->progressBar) { $this->UpdateProgressBar(7,intval(30 + ($i*40/$numrows)),' '); }	// *PROGRESS-BAR*
 	  if (isset($table['is_tfoot'][$i]) && $table['is_tfoot'][$i] && $level==1) { 
 		$tablefooterrowheight += $table['hr'][$i]; 
 		$tablefooter[$i][0]['trbackground-images'] = $table['trbackground-images'][$i];
@@ -26704,8 +26510,6 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 
 	}// end of rows
 
-	if ($this->progressBar) { $this->UpdateProgressBar(7,70,' '); }	// *PROGRESS-BAR*
-
 	if (count($this->cellBorderBuffer)) { $this->printcellbuffer(); }
 
  
@@ -27321,9 +27125,7 @@ function _putresources() {
 		$this->_putocg();
 	$this->_putextgstates();
 	$this->_putspotcolors();
-	if ($this->progressBar) { $this->UpdateProgressBar(2,'40','Compiling Fonts'); }	// *PROGRESS-BAR*
 	$this->_putfonts();
-	if ($this->progressBar) { $this->UpdateProgressBar(2,'50','Compiling Images'); }	// *PROGRESS-BAR*
 	$this->_putimages();
 	$this->_putformobjects();	// *IMAGES-CORE*
 
