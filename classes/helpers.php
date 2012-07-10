@@ -435,16 +435,16 @@ class Numeric
 		$size = strtolower($size);
 		if ($size == 'thin') {
 			//1 pixel width for table borders
-			return 25.4 / $dpi; // mPDF 4.4.003
+			return 25.4 / $dpi;
 		} else if ($size == 'medium') {
 			//3 pixel width for table borders
-			return 3 * 25.4 / $dpi; // mPDF 4.4.003
+			return 3 * 25.4 / $dpi;
 		} else if ($size == 'thick') {
 			//5 pixel width for table borders
-			return 5 * 25.4 / $dpi; // mPDF 4.4.003
+			return 5 * 25.4 / $dpi;
 		} else if (strstr($size, 'px')) {
 			//pixels
-			return $size * 25.4 / $dpi; // mPDF 4.4.003
+			return $size * 25.4 / $dpi;
 		} else if (strstr($size, 'cm')) {
 			//centimeters
 			return $size * 10;
@@ -461,7 +461,7 @@ class Numeric
 			//72 pts/inch
 			return $size * 25.4 / 72;
 		} else if (strstr($size, 'ex')) {
-			// mPDF 4.4.003  Approximates "ex" as half of font height
+			// Approximates "ex" as half of font height
 			return $size * 0.5 * (($fontsize)? $fontsize : $maxsize);
 		} else if (strstr($size, 'em')) {
 			return $size * (($fontsize)? $fontsize : $maxsize);
@@ -482,7 +482,7 @@ class Numeric
 		} else if ($size == 'xx-large') {
 			return $size * 2 * (($fontsize)? $fontsize : $maxsize);
 		}
-		//nothing == px // mPDF 4.4.003
+		//nothing == px
 		return $size * 25.4 / $dpi;
 	}
 	
@@ -502,7 +502,6 @@ class Numeric
 		}
 		return $toupper ? $anum : strtolower($anum);
 	}
-
 
 	/**
 	 * toRoman
