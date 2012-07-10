@@ -249,13 +249,6 @@ var $showWatermarkImage;
 
 var $fontsizes;
 
-// Aliases for backward compatability
-var $UnvalidatedText;	// alias = $watermarkText
-var $TopicIsUnvalidated;	// alias = $showWatermarkText
-var $useOddEven;		// alias = $mirrorMargins
-var $useSubstitutionsMB;	// alias = $useSubstitutions
-
-
 
 //////////////////////
 // CLASS OBJECTS
@@ -748,7 +741,6 @@ var $compress;           //compression flag
 var $DefOrientation;     //default orientation
 var $CurOrientation;     //current orientation
 var $OrientationChanges; //array indicating orientation changes
-var $k;                  //scale factor (number of points in user unit)
 var $fwPt;
 var $fhPt;         //dimensions of page format in points
 var $fw;
@@ -838,15 +830,11 @@ function mPDF($mode='',$format='A4',$default_font_size=0,$default_font='',$mgl=1
 	$this->_dochecks();
 
 	// Set up Aliases for backwards compatability
-	$this->UnvalidatedText =& $this->watermarkText;
-	$this->TopicIsUnvalidated =& $this->showWatermarkText;
 	$this->AliasNbPg =& $this->aliasNbPg;
 	$this->AliasNbPgGp =& $this->aliasNbPgGp;
 	$this->BiDirectional =& $this->biDirectional;
 	$this->Anchor2Bookmark =& $this->anchor2Bookmark;
 	$this->KeepColumns =& $this->keepColumns;
-	$this->useOddEven =& $this->mirrorMargins;
-	$this->useSubstitutionsMB =& $this->useSubstitutions;
 
 	$this->visibility='visible';
 
@@ -11707,10 +11695,6 @@ function SetFooter($Farray=array(),$side='') {
 }
 
 /*-- WATERMARK --*/
-function setUnvalidatedText($txt='', $alpha=-1) {
-	if ($alpha>=0) $this->watermarkTextAlpha = $alpha;
-	$this->watermarkText = $txt;
-}
 function SetWatermarkText($txt='', $alpha=-1) {
 	if ($alpha>=0) $this->watermarkTextAlpha = $alpha;
 	$this->watermarkText = $txt;
