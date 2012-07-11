@@ -38,7 +38,6 @@ if (!defined('_MPDF_URI')) define('_MPDF_URI',_MPDF_PATH);
 require_once(_MPDF_PATH.'config-class.php');
 require_once(_MPDF_PATH.'includes/functions.php');
 require_once(_MPDF_PATH.'config_cp.php');
-//require_once(_MPDF_PATH.'classes/cache.php');
 require_once(_MPDF_PATH.'classes/helpers.php');
 
 if (!defined('_JPGRAPH_PATH')) define("_JPGRAPH_PATH", _MPDF_PATH.'jpgraph/'); 
@@ -2546,12 +2545,19 @@ function Rect($x,$y,$w,$h,$style='') {
 }
 
 function AddFont($family,$style='') {
-	if(empty($family)) { return; }
+	
+	if (empty($family)) { return; }
+	
 	$family = strtolower($family);
-	$style=strtoupper($style);
-	$style=str_replace('U','',$style);
-	if($style=='IB') $style='BI';
-	$fontkey = $family.$style;
+	
+	if (!$style) {
+		$style = 'R';
+		$fontkey = $family;
+	} else {
+		$style = str_replace('U', '', strtoupper($style));
+		if ($style=='IB') $style='BI';
+		$fontkey = $family.$style;
+	}
 	// check if the font has been already added
 	if(isset($this->fonts[$fontkey])) {
 		return;
@@ -2567,10 +2573,7 @@ function AddFont($family,$style='') {
 
 	if ($this->usingCoreFont) { die("mPDF Error - problem with Font management"); }
 
-	$stylekey = $style;
-	if (!$style) { $stylekey = 'R'; }
-
-	if (!isset($this->fontdata[$family][$stylekey]) || !$this->fontdata[$family][$stylekey]) {
+	if (!isset($this->fontdata[$family][$style]) || !$this->fontdata[$family][$style]) {
 		die('mPDF Error - Font is not supported - '.$family.' '.$style);
 	}
 
@@ -2583,18 +2586,19 @@ function AddFont($family,$style='') {
 	$BMPselected = false;
 	@include(_MPDF_TTFONTDATAPATH.$fontkey.'.mtx.php');
 
+
 	$ttffile = '';
 	if (defined('_MPDF_SYSTEM_TTFONTS')) {
-		$ttffile = _MPDF_SYSTEM_TTFONTS.$this->fontdata[$family][$stylekey];
+		$ttffile = _MPDF_SYSTEM_TTFONTS.$this->fontdata[$family][$style];
 		if (!file_exists($ttffile)) { $ttffile = ''; }
 	}
 	if (!$ttffile) {
-		$ttffile = _MPDF_TTFONTPATH.$this->fontdata[$family][$stylekey];
+		$ttffile = _MPDF_TTFONTPATH.$this->fontdata[$family][$style];
 		if (!file_exists($ttffile)) { die("mPDF Error - cannot find TTF TrueType font file - ".$ttffile); }
 	}
 	$ttfstat = stat($ttffile);
 
-	if (isset($this->fontdata[$family]['TTCfontID'][$stylekey])) { $TTCfontID = $this->fontdata[$family]['TTCfontID'][$stylekey]; }
+	if (isset($this->fontdata[$family]['TTCfontID'][$style])) { $TTCfontID = $this->fontdata[$family]['TTCfontID'][$style]; }
 	else { $TTCfontID = 0; }
 
 
