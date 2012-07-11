@@ -1170,7 +1170,7 @@ function mPDF($mode='',$format='A4',$default_font_size=0,$default_font='',$mgl=1
 	else {
 		$this->setMBencoding('UTF-8');	// sets $this->mb_enc
 	}
-	@mb_regex_encoding('UTF-8');	// required only for mb_ereg... and mb_split functions
+	mb_regex_encoding('UTF-8');	// required only for mb_ereg... and mb_split functions
 
 
 	// Adobe CJK fonts

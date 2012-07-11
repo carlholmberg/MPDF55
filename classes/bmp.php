@@ -30,12 +30,6 @@ function _getBMPimage($data, $file) {
 			$info['cs'] = 'DeviceRGB';
 			$info['bpc'] = 8;
 		}
-
-		/*if ($this->mpdf->restrictColorSpace==1 || $this->mpdf->PDFX || $this->mpdf->restrictColorSpace==3) {
-			if (($this->mpdf->PDFA && !$this->mpdf->PDFAauto) || ($this->mpdf->PDFX && !$this->mpdf->PDFXauto)) { $this->mpdf->PDFAXwarnings[] = "Image cannot be converted to suitable colour space for PDFA or PDFX file - ".$file." - (Image replaced by 'no-image'.)"; }
-			return array('error' => "BMP Image cannot be converted to suitable colour space - ".$file." - (Image replaced by 'no-image'.)"); 
-		}*/
-
 		$biXPelsPerMeter=$this->_fourbytes2int_le(substr($data,38,4));	// horizontal pixels per meter, usually set to zero
 		//$biYPelsPerMeter=$this->_fourbytes2int_le(substr($data,42,4));	// vertical pixels per meter, usually set to zero
 		$biXPelsPerMeter=round($biXPelsPerMeter/1000 *25.4);
@@ -126,10 +120,6 @@ function _getBMPimage($data, $file) {
 		  default:
 			return array('error' => 'Error parsing BMP image - Unsupported image biBitCount'); 
 		}
-		/*if ($this->mpdf->compress) {
-			$bmpdata=gzcompress($bmpdata);
-			$info['f']='FlateDecode';
-		} */
 		$info['data']=$bmpdata;
 		$info['type']='bmp';
 		return $info;
