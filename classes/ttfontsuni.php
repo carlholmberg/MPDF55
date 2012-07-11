@@ -35,131 +35,8 @@ define("GF_XYSCALE",(1 << 6));
 define("GF_TWOBYTWO",(1 << 7));
 
 
-class BinaryFile
-{
-    var $filename; // path to file
-    var $fh;       // filehandle
-    var $_pos;     // position
-    
 
-    function open($file) {
-        $this->filename = $file;
-		$this->fh = fopen($file, 'rb') or die('Can\'t open file ' . $file);
-		$this->_pos = 0;
-    }
-
-	function read_ushort()
-	{
-		$this->_pos += 2;
-		$s = fread($this->fh, 2);
-		return (ord($s[0])<<8) + ord($s[1]);
-	}
-
-	function read_ulong()
-	{
-		$this->_pos += 4;
-		$s = fread($this->fh, 4);
-		// if large uInt32 as an integer, PHP converts it to -ve
-		return (ord($s[0])*16777216) + (ord($s[1])<<16) + (ord($s[2])<<8) + ord($s[3]); // 	16777216  = 1<<24
-	}
-
-	function read_tag()
-	{
-		$this->_pos += 4;
-		return fread($this->fh,4);
-	}
-
-	function read_short()
-	{
-		$this->_pos += 2;
-		$s = fread($this->fh,2);
-		$a = (ord($s[0])<<8) + ord($s[1]);
-		if ($a & (1 << 15) ) { 
-			$a = ($a - (1 << 16)); 
-		}
-		return $a;
-	}
-	
-	
-	function seek($pos)
-	{
-		$this->_pos = $pos;
-		fseek($this->fh,$this->_pos);
-		return $this->_pos;
-	}
-
-	
-	function skip($delta)
-	{
-		$this->_pos = $this->_pos + $delta;
-		fseek($this->fh,$delta,SEEK_CUR);
-	}
-
-	function get_ushort($pos)
-	{
-		fseek($this->fh,$pos);
-		$s = fread($this->fh,2);
-		return (ord($s[0])<<8) + ord($s[1]);
-	}
-
-	function get_ulong($pos)
-	{
-		fseek($this->fh,$pos);
-		$s = fread($this->fh,4);
-		// iF large uInt32 as an integer, PHP converts it to -ve
-		return (ord($s[0])*16777216) + (ord($s[1])<<16) + (ord($s[2])<<8) + ord($s[3]); // 	16777216  = 1<<24
-	}
-
-	function get_chunk($pos, $length)
-	{
-		fseek($this->fh,$pos);
-		if ($length <1) { return ''; }
-		return (fread($this->fh,$length));
-	}
-
-	
-	
-	static function pack_short($val) {
-		if ($val<0) { 
-			$val = abs($val);
-			$val = ~$val;
-			$val += 1;
-		}
-		return pack("n",$val); 
-	}
-
-
-    static function unpack_short($s) {
-		$a = (ord($s[0])<<8) + ord($s[1]);
-		if ($a & (1 << 15) ) { 
-			$a = ($a - (1 << 16)); 
-		}
-		return $a;
-	}
-	
-	static function splice($stream, $offset, $value) {
-		return substr($stream,0,$offset) . $value . substr($stream,$offset+strlen($value));
-	}
-
-	static function _set_ushort($stream, $offset, $value) {
-		$up = pack("n", $value);
-		return self::splice($stream, $offset, $up);
-	}
-
-	static function _set_short($stream, $offset, $val) {
-		if ($val<0) { 
-			$val = abs($val);
-			$val = ~$val;
-			$val += 1;
-		}
-		$up = pack("n",$val); 
-		return self::splice($stream, $offset, $up);
-	}
-
-}
-
-
-class TTFontFile extends BinaryFile {
+class TTFontFile {
 
 var $unAGlyphs;	// mPDF 5.4.05
 var $panose;
@@ -175,6 +52,8 @@ var $entrySelector;
 var $rangeShift;
 var $tables;
 var $otables;
+var $filename;
+var $fh;
 var $glyphPos;
 var $charToGlyph;
 var $ascent;
@@ -207,9 +86,9 @@ var $kerninfo;
 
 	function getMetrics($file, $TTCfontID=0, $debug=false, $BMPonly=false, $kerninfo=false, $unAGlyphs=false) {	// mPDF 5.4.05
 		$this->unAGlyphs = $unAGlyphs;	// mPDF 5.4.05
-		
-		$this->open($file);
-		
+		$this->filename = $file;
+		$this->fh = fopen($file,'rb') or die('Can\'t open file ' . $file);
+		$this->_pos = 0;
 		$this->charWidths = '';
 		$this->glyphPos = array();
 		$this->charToGlyph = array();
@@ -267,12 +146,12 @@ var $kerninfo;
 		foreach($this->tables AS $t) {
 		  if ($t['length'] > 0 && $t['length'] < $this->maxStrLenRead) {	// 1.02
             	$table = $this->get_chunk($t['offset'], $t['length']);
-            	$checksum = self::calcChecksum($table);
+            	$checksum = $this->calcChecksum($table);
             	if ($t['tag'] == 'head') {
 				$up = unpack('n*', substr($table,8,4));
 				$adjustment[0] = $up[1];
 				$adjustment[1] = $up[2];
-            		$checksum = self::sub32($checksum, $adjustment);
+            		$checksum = $this->sub32($checksum, $adjustment);
 			}
             	$xchecksum = $t['checksum'];
             	if ($xchecksum != $checksum) 
@@ -281,7 +160,7 @@ var $kerninfo;
 		}
 	}
 
-	static function sub32($x, $y) {
+	function sub32($x, $y) {
 		$xlo = $x[1];
 		$xhi = $x[0];
 		$ylo = $y[1];
@@ -294,7 +173,7 @@ var $kerninfo;
 		return array($reshi, $reslo);
 	}
 
-	static function calcChecksum($data)  {
+	function calcChecksum($data)  {
 		if (strlen($data) % 4) { $data .= str_repeat("\0",(4-(strlen($data) % 4))); }
 		$len = strlen($data);
 		$hi=0x0000;
@@ -314,11 +193,106 @@ var $kerninfo;
 		return array($offset, $length);
 	}
 
+	function seek($pos) {
+		$this->_pos = $pos;
+		fseek($this->fh,$this->_pos);
+	}
+
+	function skip($delta) {
+		$this->_pos = $this->_pos + $delta;
+		fseek($this->fh,$delta,SEEK_CUR);
+	}
+
 	function seek_table($tag, $offset_in_table = 0) {
 		$tpos = $this->get_table_pos($tag);
-		return $this->seek($tpos[0] + $offset_in_table);
+		$this->_pos = $tpos[0] + $offset_in_table;
+		fseek($this->fh, $this->_pos);
+		return $this->_pos;
 	}
-	
+
+	function read_tag() {
+		$this->_pos += 4;
+		return fread($this->fh,4);
+	}
+
+	function read_short() {
+		$this->_pos += 2;
+		$s = fread($this->fh,2);
+		$a = (ord($s[0])<<8) + ord($s[1]);
+		if ($a & (1 << 15) ) { 
+			$a = ($a - (1 << 16)); 
+		}
+		return $a;
+	}
+
+	function unpack_short($s) {
+		$a = (ord($s[0])<<8) + ord($s[1]);
+		if ($a & (1 << 15) ) { 
+			$a = ($a - (1 << 16)); 
+		}
+		return $a;
+	}
+
+	function read_ushort() {
+		$this->_pos += 2;
+		$s = fread($this->fh,2);
+		return (ord($s[0])<<8) + ord($s[1]);
+	}
+
+	function read_ulong() {
+		$this->_pos += 4;
+		$s = fread($this->fh,4);
+		// if large uInt32 as an integer, PHP converts it to -ve
+		return (ord($s[0])*16777216) + (ord($s[1])<<16) + (ord($s[2])<<8) + ord($s[3]); // 	16777216  = 1<<24
+	}
+
+	function get_ushort($pos) {
+		fseek($this->fh,$pos);
+		$s = fread($this->fh,2);
+		return (ord($s[0])<<8) + ord($s[1]);
+	}
+
+	function get_ulong($pos) {
+		fseek($this->fh,$pos);
+		$s = fread($this->fh,4);
+		// iF large uInt32 as an integer, PHP converts it to -ve
+		return (ord($s[0])*16777216) + (ord($s[1])<<16) + (ord($s[2])<<8) + ord($s[3]); // 	16777216  = 1<<24
+	}
+
+	function pack_short($val) {
+		if ($val<0) { 
+			$val = abs($val);
+			$val = ~$val;
+			$val += 1;
+		}
+		return pack("n",$val); 
+	}
+
+	function splice($stream, $offset, $value) {
+		return substr($stream,0,$offset) . $value . substr($stream,$offset+strlen($value));
+	}
+
+	function _set_ushort($stream, $offset, $value) {
+		$up = pack("n", $value);
+		return $this->splice($stream, $offset, $up);
+	}
+
+	function _set_short($stream, $offset, $val) {
+		if ($val<0) { 
+			$val = abs($val);
+			$val = ~$val;
+			$val += 1;
+		}
+		$up = pack("n",$val); 
+		return $this->splice($stream, $offset, $up);
+	}
+
+	function get_chunk($pos, $length) {
+		fseek($this->fh,$pos);
+		if ($length <1) { return ''; }
+		return (fread($this->fh,$length));
+	}
+
 	function get_table($tag) {
 		list($pos, $length) = $this->get_table_pos($tag);
 		if ($length == 0) { return ''; }
@@ -328,7 +302,7 @@ var $kerninfo;
 
 	function add($tag, $data) {
 		if ($tag == 'head') {
-			$data = self::splice($data, 8, "\0\0\0\0");
+			$data = $this->splice($data, 8, "\0\0\0\0");
 		}
 		$this->otables[$tag] = $data;
 	}
@@ -338,9 +312,9 @@ var $kerninfo;
 /////////////////////////////////////////////////////////////////////////////////////////
 	function getCTG($file, $TTCfontID=0, $debug=false, $unAGlyphs=false) {	// mPDF 5.4.05
 		$this->unAGlyphs = $unAGlyphs;	// mPDF 5.4.05
-		
-		$this->open($file);
-
+		$this->filename = $file;
+		$this->fh = fopen($file,'rb') or die('Can\'t open file ' . $file);
+		$this->_pos = 0;
 		$this->charWidths = '';
 		$this->glyphPos = array();
 		$this->charToGlyph = array();
@@ -778,9 +752,9 @@ var $kerninfo;
 
 	function makeSubset($file, &$subset, $TTCfontID=0, $debug=false, $unAGlyphs=false) {	// mPDF 5.4.05
 		$this->unAGlyphs = $unAGlyphs;	// mPDF 5.4.05
-		
-		$this->open($file);
-
+		$this->filename = $file;
+		$this->fh = fopen($file ,'rb') or die('Can\'t open file ' . $file);
+		$this->_pos = 0;
 		$this->charWidths = '';
 		$this->glyphPos = array();
 		$this->charToGlyph = array();
@@ -1067,16 +1041,16 @@ var $kerninfo;
 
 			if ($glyphLen > 0) {
 			  if (_RECALC_PROFILE) {
-				$xMin = self::unpack_short(substr($data,2,2));
-				$yMin = self::unpack_short(substr($data,4,2));
-				$xMax = self::unpack_short(substr($data,6,2));
-				$yMax = self::unpack_short(substr($data,8,2));
+				$xMin = $this->unpack_short(substr($data,2,2));
+				$yMin = $this->unpack_short(substr($data,4,2));
+				$xMax = $this->unpack_short(substr($data,6,2));
+				$yMax = $this->unpack_short(substr($data,8,2));
 				$xMinT = min($xMinT,$xMin);
 				$yMinT = min($yMinT,$yMin);
 				$xMaxT = max($xMaxT,$xMax);
 				$yMaxT = max($yMaxT,$yMax);
-				$aw = self::unpack_short(substr($hm,0,2)); 
-				$lsb = self::unpack_short(substr($hm,2,2));
+				$aw = $this->unpack_short(substr($hm,0,2)); 
+				$lsb = $this->unpack_short(substr($hm,2,2));
 				$advanceWidthMax = max($advanceWidthMax,$aw);
 				$minLeftSideBearing = min($minLeftSideBearing,$lsb);
 				$minRightSideBearing = min($minRightSideBearing,($aw - $lsb - ($xMax - $xMin)));
@@ -1095,7 +1069,7 @@ var $kerninfo;
 					$up = unpack("n", substr($data,$pos_in_glyph+2,2));
 					$glyphIdx = $up[1];
 					$this->glyphdata[$originalGlyphIdx]['compGlyphs'][] = $glyphIdx;
-					$data = self::_set_ushort($data, $pos_in_glyph + 2, $glyphSet[$glyphIdx]);
+					$data = $this->_set_ushort($data, $pos_in_glyph + 2, $glyphSet[$glyphIdx]);
 					$pos_in_glyph += 4;
 					if ($flags & GF_WORDS) { $pos_in_glyph += 4; }
 					else { $pos_in_glyph += 2; }
@@ -1168,12 +1142,12 @@ var $kerninfo;
 		// head - Font header
 		///////////////////////////////////
 		$head = $this->get_table('head');
-		$head = self::_set_ushort($head, 50, $indexToLocFormat);
+		$head = $this->_set_ushort($head, 50, $indexToLocFormat);
 		if (_RECALC_PROFILE) {
-			$head = self::_set_short($head, 36, $xMinT);	// for all glyph bounding boxes
-			$head = self::_set_short($head, 38, $yMinT);	// for all glyph bounding boxes
-			$head = self::_set_short($head, 40, $xMaxT);	// for all glyph bounding boxes
-			$head = self::_set_short($head, 42, $yMaxT);	// for all glyph bounding boxes
+			$head = $this->_set_short($head, 36, $xMinT);	// for all glyph bounding boxes
+			$head = $this->_set_short($head, 38, $yMinT);	// for all glyph bounding boxes
+			$head = $this->_set_short($head, 40, $xMaxT);	// for all glyph bounding boxes
+			$head = $this->_set_short($head, 42, $yMaxT);	// for all glyph bounding boxes
 			$head[17] = chr($head[17] & ~(1 << 4)); 	// Unset Bit 4 (as hdmx/LTSH tables not included)
 		}
 		$this->add('head', $head);
@@ -1183,12 +1157,12 @@ var $kerninfo;
 		// hhea - Horizontal Header
 		///////////////////////////////////
 		$hhea = $this->get_table('hhea');
-		$hhea = self::_set_ushort($hhea, 34, $numberOfHMetrics);
+		$hhea = $this->_set_ushort($hhea, 34, $numberOfHMetrics);
 		if (_RECALC_PROFILE) {
-			$hhea = self::_set_ushort($hhea, 10, $advanceWidthMax);	
-			$hhea = self::_set_short($hhea, 12, $minLeftSideBearing);	
-			$hhea = self::_set_short($hhea, 14, $minRightSideBearing);	
-			$hhea = self::_set_short($hhea, 16, $xMaxExtent);	
+			$hhea = $this->_set_ushort($hhea, 10, $advanceWidthMax);	
+			$hhea = $this->_set_short($hhea, 12, $minLeftSideBearing);	
+			$hhea = $this->_set_short($hhea, 14, $minRightSideBearing);	
+			$hhea = $this->_set_short($hhea, 16, $xMaxExtent);	
 		}
 		$this->add('hhea', $hhea);
 
@@ -1196,14 +1170,14 @@ var $kerninfo;
 		// maxp - Maximum Profile
 		///////////////////////////////////
 		$maxp = $this->get_table('maxp');
-		$maxp = self::_set_ushort($maxp, 4, $numGlyphs);
+		$maxp = $this->_set_ushort($maxp, 4, $numGlyphs);
 		if (_RECALC_PROFILE) {
-			$maxp = self::_set_ushort($maxp, 6, $maxPoints);	// points in non-compound glyph
-			$maxp = self::_set_ushort($maxp, 8, $maxContours);	// contours in non-compound glyph
-			$maxp = self::_set_ushort($maxp, 10, $maxComponentPoints);	// points in compound glyph
-			$maxp = self::_set_ushort($maxp, 12, $maxComponentContours);	// contours in compound glyph
-			$maxp = self::_set_ushort($maxp, 28, $maxComponentElements);	// number of glyphs referenced at top level
-			$maxp = self::_set_ushort($maxp, 30, $maxComponentDepth);	// levels of recursion, set to 0 if font has only simple glyphs
+			$maxp = $this->_set_ushort($maxp, 6, $maxPoints);	// points in non-compound glyph
+			$maxp = $this->_set_ushort($maxp, 8, $maxContours);	// contours in non-compound glyph
+			$maxp = $this->_set_ushort($maxp, 10, $maxComponentPoints);	// points in compound glyph
+			$maxp = $this->_set_ushort($maxp, 12, $maxComponentContours);	// contours in compound glyph
+			$maxp = $this->_set_ushort($maxp, 28, $maxComponentElements);	// number of glyphs referenced at top level
+			$maxp = $this->_set_ushort($maxp, 30, $maxComponentDepth);	// levels of recursion, set to 0 if font has only simple glyphs
 		}
 		$this->add('maxp', $maxp);
 
@@ -1228,18 +1202,18 @@ var $kerninfo;
 
 			$os2 = $this->get_table('OS/2');
 			if (_RECALC_PROFILE) {
-				$os2 = self::_set_ushort($os2, 62, $fsSelection);	
-				$os2 = self::_set_ushort($os2, 66, $fsLastCharIndex);
-				$os2 = self::_set_ushort($os2, 42, 0x0000);	// ulCharRange (ulUnicodeRange) bits 24-31 | 16-23
-				$os2 = self::_set_ushort($os2, 44, 0x0000);	// ulCharRange (Unicode ranges) bits  8-15 |  0-7
-				$os2 = self::_set_ushort($os2, 46, $nonBMP);	// ulCharRange (Unicode ranges) bits 56-63 | 48-55
-				$os2 = self::_set_ushort($os2, 48, 0x0000);	// ulCharRange (Unicode ranges) bits 40-47 | 32-39
-				$os2 = self::_set_ushort($os2, 50, 0x0000);	// ulCharRange (Unicode ranges) bits  88-95 | 80-87
-				$os2 = self::_set_ushort($os2, 52, 0x0000);	// ulCharRange (Unicode ranges) bits  72-79 | 64-71
-				$os2 = self::_set_ushort($os2, 54, 0x0000);	// ulCharRange (Unicode ranges) bits  120-127 | 112-119
-				$os2 = self::_set_ushort($os2, 56, 0x0000);	// ulCharRange (Unicode ranges) bits  104-111 | 96-103
+				$os2 = $this->_set_ushort($os2, 62, $fsSelection);	
+				$os2 = $this->_set_ushort($os2, 66, $fsLastCharIndex);
+				$os2 = $this->_set_ushort($os2, 42, 0x0000);	// ulCharRange (ulUnicodeRange) bits 24-31 | 16-23
+				$os2 = $this->_set_ushort($os2, 44, 0x0000);	// ulCharRange (Unicode ranges) bits  8-15 |  0-7
+				$os2 = $this->_set_ushort($os2, 46, $nonBMP);	// ulCharRange (Unicode ranges) bits 56-63 | 48-55
+				$os2 = $this->_set_ushort($os2, 48, 0x0000);	// ulCharRange (Unicode ranges) bits 40-47 | 32-39
+				$os2 = $this->_set_ushort($os2, 50, 0x0000);	// ulCharRange (Unicode ranges) bits  88-95 | 80-87
+				$os2 = $this->_set_ushort($os2, 52, 0x0000);	// ulCharRange (Unicode ranges) bits  72-79 | 64-71
+				$os2 = $this->_set_ushort($os2, 54, 0x0000);	// ulCharRange (Unicode ranges) bits  120-127 | 112-119
+				$os2 = $this->_set_ushort($os2, 56, 0x0000);	// ulCharRange (Unicode ranges) bits  104-111 | 96-103
 			}
-			$os2 = self::_set_ushort($os2, 46, $nonBMP);	// Unset Bit 57 (indicates non-BMP) - for interactive forms
+			$os2 = $this->_set_ushort($os2, 46, $nonBMP);	// Unset Bit 57 (indicates non-BMP) - for interactive forms
 
 			$this->add('OS/2', $os2 );
 		}
@@ -1256,9 +1230,9 @@ var $kerninfo;
 
 	// Also does SMP
 	function makeSubsetSIP($file, &$subset, $TTCfontID=0, $debug=false) {
-		
-		$this->open($file);
-
+		$this->fh = fopen($file ,'rb') or die('Can\'t open file ' . $file);
+		$this->filename = $file;
+		$this->_pos = 0;
 		$this->unAGlyphs = false;	// mPDF 5.4.05
 		$this->charWidths = '';
 		$this->glyphPos = array();
@@ -1449,7 +1423,7 @@ var $kerninfo;
 			$encodingId = $this->read_ushort();
 			if ($platformId == 3 && $encodingId == 1) {
 				$pos = 6 + ($i * 12) + 2;
-				$name = self::_set_ushort($name, $pos, 0x00);	// Change encoding to 3,0 rather than 3,1
+				$name = $this->_set_ushort($name, $pos, 0x00);	// Change encoding to 3,0 rather than 3,1
 			}
 			$this->skip(8);
 		}
@@ -1460,25 +1434,25 @@ var $kerninfo;
 		///////////////////////////////////
 		if (isset($this->tables['OS/2'])) { 
 			$os2 = $this->get_table('OS/2');
-			$os2 = self::_set_ushort($os2, 42, 0x00);	// ulCharRange (Unicode ranges)
-			$os2 = self::_set_ushort($os2, 44, 0x00);	// ulCharRange (Unicode ranges)
-			$os2 = self::_set_ushort($os2, 46, 0x00);	// ulCharRange (Unicode ranges)
-			$os2 = self::_set_ushort($os2, 48, 0x00);	// ulCharRange (Unicode ranges)
+			$os2 = $this->_set_ushort($os2, 42, 0x00);	// ulCharRange (Unicode ranges)
+			$os2 = $this->_set_ushort($os2, 44, 0x00);	// ulCharRange (Unicode ranges)
+			$os2 = $this->_set_ushort($os2, 46, 0x00);	// ulCharRange (Unicode ranges)
+			$os2 = $this->_set_ushort($os2, 48, 0x00);	// ulCharRange (Unicode ranges)
 
-			$os2 = self::_set_ushort($os2, 50, 0x00);	// ulCharRange (Unicode ranges)
-			$os2 = self::_set_ushort($os2, 52, 0x00);	// ulCharRange (Unicode ranges)
-			$os2 = self::_set_ushort($os2, 54, 0x00);	// ulCharRange (Unicode ranges)
-			$os2 = self::_set_ushort($os2, 56, 0x00);	// ulCharRange (Unicode ranges)
+			$os2 = $this->_set_ushort($os2, 50, 0x00);	// ulCharRange (Unicode ranges)
+			$os2 = $this->_set_ushort($os2, 52, 0x00);	// ulCharRange (Unicode ranges)
+			$os2 = $this->_set_ushort($os2, 54, 0x00);	// ulCharRange (Unicode ranges)
+			$os2 = $this->_set_ushort($os2, 56, 0x00);	// ulCharRange (Unicode ranges)
 			// Set Symbol character only in ulCodePageRange
-			$os2 = self::_set_ushort($os2, 78, 0x8000);	// ulCodePageRange = Bit #31 Symbol ****  78 = Bit 16-31
-			$os2 = self::_set_ushort($os2, 80, 0x0000);	// ulCodePageRange = Bit #31 Symbol ****  80 = Bit 0-15
-			$os2 = self::_set_ushort($os2, 82, 0x0000);	// ulCodePageRange = Bit #32- Symbol **** 82 = Bits 48-63
-			$os2 = self::_set_ushort($os2, 84, 0x0000);	// ulCodePageRange = Bit #32- Symbol **** 84 = Bits 32-47
+			$os2 = $this->_set_ushort($os2, 78, 0x8000);	// ulCodePageRange = Bit #31 Symbol ****  78 = Bit 16-31
+			$os2 = $this->_set_ushort($os2, 80, 0x0000);	// ulCodePageRange = Bit #31 Symbol ****  80 = Bit 0-15
+			$os2 = $this->_set_ushort($os2, 82, 0x0000);	// ulCodePageRange = Bit #32- Symbol **** 82 = Bits 48-63
+			$os2 = $this->_set_ushort($os2, 84, 0x0000);	// ulCodePageRange = Bit #32- Symbol **** 84 = Bits 32-47
 	
-			$os2 = self::_set_ushort($os2, 64, 0x01);		// FirstCharIndex
-			$os2 = self::_set_ushort($os2, 66, count($subset));		// LastCharIndex
+			$os2 = $this->_set_ushort($os2, 64, 0x01);		// FirstCharIndex
+			$os2 = $this->_set_ushort($os2, 66, count($subset));		// LastCharIndex
 			// Set PANOSE first bit to 5 for Symbol
-			$os2 = self::splice($os2, 32, chr(5).chr(0).chr(1).chr(0).chr(1).chr(0).chr(0).chr(0).chr(0).chr(0));
+			$os2 = $this->splice($os2, 32, chr(5).chr(0).chr(1).chr(0).chr(1).chr(0).chr(0).chr(0).chr(0).chr(0));
 			$this->add('OS/2', $os2 );
 		}
 
@@ -1504,14 +1478,14 @@ var $kerninfo;
 		// hhea - Horizontal Header
 		///////////////////////////////////
 		$hhea = $this->get_table('hhea');
-		$hhea = self::_set_ushort($hhea, 34, $numberOfHMetrics);
+		$hhea = $this->_set_ushort($hhea, 34, $numberOfHMetrics);
 		$this->add('hhea', $hhea);
 
 		///////////////////////////////////
 		// maxp - Maximum Profile
 		///////////////////////////////////
 		$maxp = $this->get_table('maxp');
-		$maxp = self::_set_ushort($maxp, 4, $numGlyphs);
+		$maxp = $this->_set_ushort($maxp, 4, $numGlyphs);
 		$this->add('maxp', $maxp);
 
 
@@ -1660,7 +1634,7 @@ var $kerninfo;
 					$flags = $up[1];
 					$up = unpack("n", substr($data,$pos_in_glyph+2,2));
 					$glyphIdx = $up[1];
-					$data = self::_set_ushort($data, $pos_in_glyph + 2, $glyphSet[$glyphIdx]);
+					$data = $this->_set_ushort($data, $pos_in_glyph + 2, $glyphSet[$glyphIdx]);
 					$pos_in_glyph += 4;
 					if ($flags & GF_WORDS) { $pos_in_glyph += 4; }
 					else { $pos_in_glyph += 2; }
@@ -1698,7 +1672,7 @@ var $kerninfo;
 		// head - Font header
 		///////////////////////////////////
 		$head = $this->get_table('head');
-		$head = self::_set_ushort($head, 50, $indexToLocFormat);
+		$head = $this->_set_ushort($head, 50, $indexToLocFormat);
 		$this->add('head', $head);
 
 		fclose($this->fh);
@@ -2007,7 +1981,7 @@ var $kerninfo;
 		foreach ($tables AS $tag=>$data) {
 			if ($tag == 'head') { $head_start = $offset; }
 			$stm .= $tag;
-			$checksum = self::calcChecksum($data);
+			$checksum = $this->calcChecksum($data);
 			$stm .= pack("nn", $checksum[0],$checksum[1]);
 			$stm .= pack("NN", $offset, strlen($data));
 			$paddedLength = (strlen($data)+3)&~3;
@@ -2020,19 +1994,19 @@ var $kerninfo;
 			$stm .= substr($data,0,(strlen($data)&~3));
 		}
 
-		$checksum = self::calcChecksum($stm);
-		$checksum = self::sub32(array(0xB1B0,0xAFBA), $checksum);
+		$checksum = $this->calcChecksum($stm);
+		$checksum = $this->sub32(array(0xB1B0,0xAFBA), $checksum);
 		$chk = pack("nn", $checksum[0],$checksum[1]);
-		$stm = self::splice($stm,($head_start + 8),$chk);
+		$stm = $this->splice($stm,($head_start + 8),$chk);
 		return $stm ;
 	}
 
 
 	function repackageTTF($file, $TTCfontID=0, $debug=false, $unAGlyphs=false) {	// mPDF 5.4.05
 		$this->unAGlyphs = $unAGlyphs;	// mPDF 5.4.05
-		
-		$this->open($file);
-
+		$this->filename = $file;
+		$this->fh = fopen($file ,'rb') or die('Can\'t open file ' . $file);
+		$this->_pos = 0;
 		$this->charWidths = '';
 		$this->glyphPos = array();
 		$this->charToGlyph = array();
