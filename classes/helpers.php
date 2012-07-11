@@ -456,7 +456,7 @@ class Numeric
 			default:
 				preg_match('/([0-9\.]*)?[\ ]?([a-zA-Z%]*)?/', $size, $matches);
 				if (count($matches) == 3) {
-					$size = intval($matches[1]);
+					$size = floatval($matches[1]);
 					switch ($matches[2]) {
 						case 'px':
 							return $size * 25.4 / Conf::DPI;
