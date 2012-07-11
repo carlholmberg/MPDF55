@@ -113,11 +113,11 @@ function Gradient($x, $y, $w, $h, $type, $stops=array(), $colorspace='RGB', $coo
 	$useh = $bboxh;
 	if ($type < 1) { $type = 2; }
 	if ($coords[0]!==false && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$coords[0],$m)) { 
-		$tmp = $this->mpdf->ConvertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
+		$tmp = Numeric::convertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
 		if ($tmp) { $coords[0] = $tmp/$w; }
 	}
 	if ($coords[1]!==false && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$coords[1],$m)) { 
-		$tmp = $this->mpdf->ConvertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
+		$tmp = Numeric::convertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
 		if ($tmp) { $coords[1] = 1-($tmp/$h); }
 	}
 	// LINEAR
@@ -344,7 +344,7 @@ function Gradient($x, $y, $w, $h, $type, $stops=array(), $colorspace='RGB', $coo
 
 	for($i=0;$i<count($stops);$i++) {
 	  if (isset($stops[$i]['offset']) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$stops[$i]['offset'],$m)) { 
-		$tmp = $this->mpdf->ConvertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
+		$tmp = Numeric::convertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
 		$stops[$i]['offset'] = $tmp/$axis_length;
 	  }
 	}
@@ -492,12 +492,12 @@ function parseMozGradient($bg) {
 		// Check for %? ?% or %%
 		if (preg_match('/(\d+)[%]/i',$first[0],$m)) { $startx = $m[1]/100; }
 		else if (!isset($startx) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$first[0],$m)) { 
-			$tmp = $this->mpdf->ConvertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
 			if ($tmp) { $startx = $m[1]; }
 		}
 		if (isset($first[1]) && preg_match('/(\d+)[%]/i',$first[1],$m)) { $starty = 1 - ($m[1]/100); }
 		else if (!isset($starty) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$first[1],$m)) { 
-			$tmp = $this->mpdf->ConvertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
 			if ($tmp) { $starty = $m[1]; }
 		}
 		if (isset($startx) && !isset($starty)) { $starty = 0.5; }
@@ -536,7 +536,7 @@ function parseMozGradient($bg) {
 			if ($stop['offset']>1) { unset($stop['offset']); }
 		}
 		else if (isset($el[1]) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$el[1],$m)) { 
-			$tmp = $this->mpdf->ConvertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
 			if ($tmp) { $stop['offset'] = $m[1]; }
 		}
 		$g['stops'][] = $stop;
@@ -593,12 +593,12 @@ function parseMozGradient($bg) {
 		// Check for %? ?% or %%
 		if (preg_match('/(\d+)[%]/i',$first[0],$m)) { $startx = $m[1]/100; }
 		else if (!isset($startx) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$first[0],$m)) { 
-			$tmp = $this->mpdf->ConvertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
 			if ($tmp) { $startx = $m[1]; }
 		}
 		if (isset($first[1]) && preg_match('/(\d+)[%]/i',$first[1],$m)) { $starty = 1 - ($m[1]/100); }
 		else if (!isset($starty) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$first[1],$m)) { 
-			$tmp = $this->mpdf->ConvertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
 			if ($tmp) { $starty = $m[1]; }
 		}
 
@@ -666,7 +666,7 @@ function parseMozGradient($bg) {
 			if ($stop['offset']>1) { unset($stop['offset']); }
 		}
 		else if (isset($el[1]) && preg_match('/([0-9.]+(px|em|ex|pc|pt|cm|mm|in))/i',$el[1],$m)) { 
-			$tmp = $this->mpdf->ConvertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
+			$tmp = Numeric::convertSize($m[1],$this->mpdf->w,$this->mpdf->FontSize,false);
 			$stop['offset'] = $el[1];
 		}
 		$g['stops'][] = $stop;

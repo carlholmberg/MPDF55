@@ -439,7 +439,7 @@ class Numeric
 				return 25.4 / Conf::DPI;
 			case 'medium':
 				//3 pixel width for table borders
-				return 3 * 25.4 / $Conf::DPI;
+				return 3 * 25.4 / Conf::DPI;
 			case 'thick':
 				//5 pixel width for table borders
 				return 5 * 25.4 / Conf::DPI;

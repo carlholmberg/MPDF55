@@ -178,7 +178,6 @@ var $CSSselectMedia;
 var $forcePortraitHeaders;
 var $forcePortraitMargins;
 var $displayDefaultOrientation;
-var $ignore_invalid_utf8;
 var $allowedCSStags;
 var $onlyCoreFonts;
 var $allow_charset_conversion;
@@ -31133,16 +31132,6 @@ function get_arab_glyphs($char, $type) {
 
 // Call-back function Used for usort in fn _tableWrite
 
-function _cmpdom($a, $b) {
-    return ($a["dom"] < $b["dom"]) ? -1 : 1;
-}
-
-function mb_strrev($str, $enc = 'utf-8'){
-	$ch = array();
-	$ch = preg_split('//u',$str);
-	$revch = array_reverse($ch);
-	return implode('',$revch);
-}
 
 /*-- COLUMNS --*/
 // Callback function from function printcolumnbuffer in mpdf

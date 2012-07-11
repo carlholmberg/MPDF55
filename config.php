@@ -93,7 +93,6 @@ $this->collapseBlockMargins = true; 	// Allows top and bottom margins to collaps
 // Automatically correct for tags where HTML specifies optional end tags e.g. P,LI,DD,TD
 // If you are confident input html is valid XHTML, turning this off may make it more reliable(?)
 $this->allow_html_optional_endtags = true;
-$this->ignore_invalid_utf8 = false;
 $this->text_input_as_HTML = false; 		// Converts all entities in Text inputs to UTF-8 before encoding
 $this->useGraphs = false;
 
