@@ -696,8 +696,8 @@ class SVG {
 			if($this->svg_attribs['overflow'] == 'hidden')
 			{
 				// Not sure if this is supposed to strip off units, but since I dont use any I will omlt this step
-				$svg_w = preg_replace("/([0-9\.]*)(.*)/i","$1",$this->svg_attribs['width']);
-				$svg_h = preg_replace("/([0-9\.]*)(.*)/i","$1",$this->svg_attribs['height']);
+				$svg_w = preg_replace('/([0-9\.]*)(.*)/i',"$1",$this->svg_attribs['width']);
+				$svg_h = preg_replace('/([0-9\.]*)(.*)/i',"$1",$this->svg_attribs['height']);
 				
 				// $xmax = floor($this->svg_attribs['width']);
 				$xmax = floor($svg_w);
@@ -811,44 +811,44 @@ $md = $sy * cos($t);
 			if (preg_match('/fill:\s*rgb\((\d+),\s*(\d+),\s*(\d+)\)/',$critere_style['style'], $m)) {
 				$current_style['fill'] = '#'.str_pad(dechex($m[1]), 2, "0", STR_PAD_LEFT).str_pad(dechex($m[2]), 2, "0", STR_PAD_LEFT).str_pad(dechex($m[3]), 2, "0", STR_PAD_LEFT);
 			}
-			else { $tmp = preg_replace("/(.*)fill:\s*([a-z0-9#_()]*|none)(.*)/i","$2",$critere_style['style']);	// mPDF 4.4.003
+			else { $tmp = preg_replace('/(.*)fill:\s*([a-z0-9#_()]*|none)(.*)/i',"$2",$critere_style['style']);	// mPDF 4.4.003
 				if ($tmp != $critere_style['style']){ $current_style['fill'] = $tmp; }
 			}
 
-			$tmp = preg_replace("/(.*)fill-opacity:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)fill-opacity:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['fill-opacity'] = $tmp;}
 
-			$tmp = preg_replace("/(.*)fill-rule:\s*([a-z0-9#]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)fill-rule:\s*([a-z0-9#]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['fill-rule'] = $tmp;}
 
 			if (preg_match('/stroke:\s*rgb\((\d+),\s*(\d+),\s*(\d+)\)/',$critere_style['style'], $m)) {
 				$current_style['stroke'] = '#'.str_pad(dechex($m[1]), 2, "0", STR_PAD_LEFT).str_pad(dechex($m[2]), 2, "0", STR_PAD_LEFT).str_pad(dechex($m[3]), 2, "0", STR_PAD_LEFT);
 			}
-			else { $tmp = preg_replace("/(.*)stroke:\s*([a-z0-9#]*|none)(.*)/i","$2",$critere_style['style']);
+			else { $tmp = preg_replace('/(.*)stroke:\s*([a-z0-9#]*|none)(.*)/i',"$2",$critere_style['style']);
 				if ($tmp != $critere_style['style']){ $current_style['stroke'] = $tmp; }
 			}
 			
-			$tmp = preg_replace("/(.*)stroke-linecap:\s*([a-z0-9#]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-linecap:\s*([a-z0-9#]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-linecap'] = $tmp;}
 
-			$tmp = preg_replace("/(.*)stroke-linejoin:\s*([a-z0-9#]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-linejoin:\s*([a-z0-9#]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-linejoin'] = $tmp;}
 			
-			$tmp = preg_replace("/(.*)stroke-miterlimit:\s*([a-z0-9#]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-miterlimit:\s*([a-z0-9#]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-miterlimit'] = $tmp;}
 			
-			$tmp = preg_replace("/(.*)stroke-opacity:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-opacity:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-opacity'] = $tmp; }
 			
-			$tmp = preg_replace("/(.*)stroke-width:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-width:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-width'] = $tmp;}
 
 			// mPDF 4.4.003
-			$tmp = preg_replace("/(.*)stroke-dasharray:\s*([a-z0-9., ]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-dasharray:\s*([a-z0-9., ]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-dasharray'] = $tmp;}
 
 			// mPDF 4.4.003
-			$tmp = preg_replace("/(.*)stroke-dashoffset:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-dashoffset:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-dashoffset'] = $tmp;}
 
 		}
@@ -912,7 +912,7 @@ $md = $sy * cos($t);
 		if (substr_count($critere_style['fill'],'url')>0){
 			//
 			// couleur degradé
-			$id_gradient = preg_replace("/url\(#([\w_]*)\)/i","$1",$critere_style['fill']);
+			$id_gradient = preg_replace('/url\(#([\w_]*)\)/i',"$1",$critere_style['fill']);
 			if ($id_gradient != $critere_style['fill']) {
 			   if (isset($this->svg_gradient[$id_gradient])) {
 				$fill_gradient = $this->svgGradient($this->svg_gradient[$id_gradient], $attribs, $element);
@@ -1926,55 +1926,55 @@ function svgDefineTxtStyle($critere_style)
 			if (preg_match('/fill:\s*rgb\((\d+),\s*(\d+),\s*(\d+)\)/',$critere_style['style'], $m)) {
 				$current_style['fill'] = '#'.str_pad(dechex($m[1]), 2, "0", STR_PAD_LEFT).str_pad(dechex($m[2]), 2, "0", STR_PAD_LEFT).str_pad(dechex($m[3]), 2, "0", STR_PAD_LEFT);
 			}
-			else { $tmp = preg_replace("/(.*)fill:\s*([a-z0-9#_()]*|none)(.*)/i","$2",$critere_style['style']);
+			else { $tmp = preg_replace('/(.*)fill:\s*([a-z0-9#_()]*|none)(.*)/i',"$2",$critere_style['style']);
 				if ($tmp != $critere_style['style']){ $current_style['fill'] = $tmp; }
 			}
 
-			$tmp = preg_replace("/(.*)fill-opacity:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)fill-opacity:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['fill-opacity'] = $tmp;}
 
-			$tmp = preg_replace("/(.*)fill-rule:\s*([a-z0-9#]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)fill-rule:\s*([a-z0-9#]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['fill-rule'] = $tmp;}
 
 			if (preg_match('/stroke:\s*rgb\((\d+),\s*(\d+),\s*(\d+)\)/',$critere_style['style'], $m)) {
 				$current_style['stroke'] = '#'.str_pad(dechex($m[1]), 2, "0", STR_PAD_LEFT).str_pad(dechex($m[2]), 2, "0", STR_PAD_LEFT).str_pad(dechex($m[3]), 2, "0", STR_PAD_LEFT);
 			}
-			else { $tmp = preg_replace("/(.*)stroke:\s*([a-z0-9#]*|none)(.*)/i","$2",$critere_style['style']);
+			else { $tmp = preg_replace('/(.*)stroke:\s*([a-z0-9#]*|none)(.*)/i',"$2",$critere_style['style']);
 				if ($tmp != $critere_style['style']){ $current_style['stroke'] = $tmp; }
 			}
 			
-			$tmp = preg_replace("/(.*)stroke-linecap:\s*([a-z0-9#]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-linecap:\s*([a-z0-9#]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-linecap'] = $tmp;}
 
-			$tmp = preg_replace("/(.*)stroke-linejoin:\s*([a-z0-9#]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-linejoin:\s*([a-z0-9#]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-linejoin'] = $tmp;}
 			
-			$tmp = preg_replace("/(.*)stroke-miterlimit:\s*([a-z0-9#]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-miterlimit:\s*([a-z0-9#]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-miterlimit'] = $tmp;}
 			
-			$tmp = preg_replace("/(.*)stroke-opacity:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-opacity:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-opacity'] = $tmp; }
 			
-			$tmp = preg_replace("/(.*)stroke-width:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-width:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-width'] = $tmp;}
 
-			$tmp = preg_replace("/(.*)stroke-dasharray:\s*([a-z0-9., ]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-dasharray:\s*([a-z0-9., ]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-dasharray'] = $tmp;}
 
-			$tmp = preg_replace("/(.*)stroke-dashoffset:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)stroke-dashoffset:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $current_style['stroke-dashoffset'] = $tmp;}
 
 			// mPDF 5.0.039
-			$tmp = preg_replace("/(.*)font-family:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)font-family:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $critere_style['font-family'] = $tmp;}
 
-			$tmp = preg_replace("/(.*)font-size:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)font-size:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $critere_style['font-size'] = $tmp;}
 
-			$tmp = preg_replace("/(.*)font-weight:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)font-weight:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $critere_style['font-weight'] = $tmp;}
 
-			$tmp = preg_replace("/(.*)font-style:\s*([a-z0-9.]*|none)(.*)/i","$2",$critere_style['style']);
+			$tmp = preg_replace('/(.*)font-style:\s*([a-z0-9.]*|none)(.*)/i',"$2",$critere_style['style']);
 			if ($tmp != $critere_style['style']){ $critere_style['font-style'] = $tmp;}
 
 		}
@@ -1999,7 +1999,7 @@ function svgDefineTxtStyle($critere_style)
 			}
 			
 			// select digits not followed by percent sign nor preceeded by forward slash
-			$tmp = preg_replace("/(.*)\b(\d+)[\b|\/](.*)/i","$2",$critere_style['font']);
+			$tmp = preg_replace('/(.*)\b(\d+)[\b|\/](.*)/i',"$2",$critere_style['font']);
 			if ($tmp != $critere_style['font']){ 
 				$current_style['font-size'] = $this->ConvertSVGSizePts($tmp); 
 				$this->mpdf_ref->SetFont('','',$current_style['font-size'],false);

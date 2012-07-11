@@ -433,57 +433,58 @@ class Numeric
 	{
 		//Identify size (remember: we are using 'mm' units here)
 		$size = strtolower($size);
-		if ($size == 'thin') {
-			//1 pixel width for table borders
-			return 25.4 / Conf::DPI;
-		} else if ($size == 'medium') {
-			//3 pixel width for table borders
-			return 3 * 25.4 / $Conf::DPI;
-		} else if ($size == 'thick') {
-			//5 pixel width for table borders
-			return 5 * 25.4 / Conf::DPI;
-		} else if (strstr($size, 'px')) {
-			//pixels
-			return $size * 25.4 / Conf::DPI;
-		} else if (strstr($size, 'cm')) {
-			//centimeters
-			return $size * 10;
-		} else if (strstr($size, 'mm')) {
-			//millimeters
-			return $size + 0;
-		} else if (strstr($size, 'in')) {
-			//inches
-			return $size * 25.4;
-		} else if (strstr($size, 'pc')) {
-			//PostScript picas
-			return $size * 38.1 / 9;
-		} else if (strstr($size, 'pt')) {
-			//72 pts/inch
-			return $size * 25.4 / 72;
-		} else if (strstr($size, 'ex')) {
-			// Approximates "ex" as half of font height
-			return $size * 0.5 * (($fontsize)? $fontsize : $maxsize);
-		} else if (strstr($size, 'em')) {
-			return $size * (($fontsize)? $fontsize : $maxsize);
-		} else if (strstr($size, '%')) {
-			return $size / 100 * (($fontsize && $usefontsize)? $fontsize : $maxsize);
-		} else if ($size == 'xx-small') {
-			return $size * 0.7 * (($fontsize)? $fontsize : $maxsize);
-		} else if ($size == 'x-small') {
-			return $size * 0.77 * (($fontsize)? $fontsize : $maxsize);
-		} else if ($size == 'small') {
-			return $size * 0.86 * (($fontsize)? $fontsize : $maxsize);
-		} else if ($size == 'medium') {
-			return $size * (($fontsize)? $fontsize : $maxsize);
-		} else if ($size == 'large') {
-			return $size * 1.2 * (($fontsize)? $fontsize : $maxsize);
-		} else if ($size == 'x-large') {
-			return $size * 1.5 * (($fontsize)? $fontsize : $maxsize);
-		} else if ($size == 'xx-large') {
-			return $size * 2 * (($fontsize)? $fontsize : $maxsize);
+		switch ($size) {
+			case 'thin':
+				//1 pixel width for table borders
+				return 25.4 / Conf::DPI;
+			case 'medium':
+				//3 pixel width for table borders
+				return 3 * 25.4 / $Conf::DPI;
+			case 'thick':
+				//5 pixel width for table borders
+				return 5 * 25.4 / Conf::DPI;
+			case 'xx-small':
+				return 0.7 * (($fontsize)? $fontsize : $maxsize);
+			case 'x-small':
+				return 0.77 * (($fontsize)? $fontsize : $maxsize);
+			case 'small':
+				return 0.86 * (($fontsize)? $fontsize : $maxsize);
+			case 'medium':
+				return (($fontsize)? $fontsize : $maxsize);
+			case 'large':
+				return 1.2 * (($fontsize)? $fontsize : $maxsize);
+			case 'x-large':
+				return 1.5 * (($fontsize)? $fontsize : $maxsize);
+			case 'xx-large':
+				return 2 * (($fontsize)? $fontsize : $maxsize);
+			default:
+				preg_match('/([0-9\.]*)?[\ ]?([a-zA-Z%]*)?/', $size, $matches);
+				if (count($matches) == 3) {
+					$size = intval($matches[1]);
+					switch ($matches[2]) {
+						case 'px':
+							return $size * 25.4 / Conf::DPI;
+						case 'cm':
+							return $size * 10;
+						case 'mm':
+							return $size;
+						case 'in':
+							return $size * 25.4; //inches
+						case 'pc':
+							return $size * 38.1 / 9; //PostScript picas
+						case 'pt':
+							return $size * 25.4 / 72; //72 pts/inch
+						case 'ex':
+							// Approximates "ex" as half of font height
+							return $size * 0.5 * (($fontsize)? $fontsize : $maxsize);
+						case 'em':
+							return $size * (($fontsize)? $fontsize : $maxsize);
+						case '%':
+							return $size / 100 * (($fontsize && $usefontsize)? $fontsize : $maxsize);
+					}
+				}
+				return intval($size) * 25.4 / Conf::DPI;
 		}
-		//nothing == px
-		return $size * 25.4 / Conf::DPI;
 	}
 	
 	/**

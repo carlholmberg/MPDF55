@@ -119,14 +119,14 @@ $excl = array_unique($excl);
 foreach($l AS $k=>$ln) {
 	$exclude = false;
 	// *XXXXX*
-	preg_match_all("/\/\/ \*([A-Za-z\-]+)\*/", $ln, $m);
+	preg_match_all('/\/\/ \*([A-Za-z\-]+)\*/', $ln, $m);
 	foreach($m[1] AS $mm) {
 		if (in_array($mm, $excl)) {
 			$exclude = true;
 		}
 	}
 	/*-- XXXXX --*/
-	preg_match_all("/\/\*-- ([A-Za-z\-]+) --\*\//", $ln, $m);
+	preg_match_all('/\/\*-- ([A-Za-z\-]+) --\*\//', $ln, $m);
 	foreach($m[1] AS $mm) {
 		if (in_array($mm, $excl)) {
 			$exclflags[$mm] = true;
@@ -135,7 +135,7 @@ foreach($l AS $k=>$ln) {
 	}
 	$exclflags = array_unique($exclflags);
 	/*-- END XXXX --*/
-	preg_match_all("/\/\*-- END ([A-Za-z\-]+) --\*\//", $ln, $m);
+	preg_match_all('/\/\*-- END ([A-Za-z\-]+) --\*\//', $ln, $m);
 	foreach($m[1] AS $mm) {
 		if (in_array($mm, $excl)) {
 			unset($exclflags[$mm]);

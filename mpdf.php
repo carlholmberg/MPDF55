@@ -6798,7 +6798,6 @@ function Output($name='',$dest='')
 			$this->Error('Incorrect output destination: '.$dest);
 		}
 
-	}	// *PROGRESS-BAR*
 	//======================================================================================================
 	// DELETE OLD TMP FILES - Housekeeping
 	// Delete any files in tmp/ directory that are >1 hrs old
@@ -8469,7 +8468,7 @@ function _enddoc() {
 	}
 
 	$this->_putpages();
-	
+
 	$this->_putresources();
 	//Info
 	$this->_newobj();
@@ -11956,7 +11955,7 @@ function WriteHTML($html,$sub=0,$init=true,$close=true) {
 				// $init - Clears and sets buffers to Top level block etc.
 
 	if (empty($html)) { $html = ''; }
-	
+
 	if ($init) {
 		$this->headerbuffer='';
 		$this->textbuffer = array();
@@ -16022,7 +16021,7 @@ function OpenTag($tag,$attr)
 			$objattr['align'] = 'C';
 		}
 	}
-	if (isset($properties['COLOR'])) { $objattr['color'] = Numeric::convertColor($properties['COLOR']); }
+	if (isset($properties['COLOR'])) { $objattr['color'] = $this->ConvertColor($properties['COLOR']); }
 	if (isset($properties['HEIGHT'])) { $objattr['linewidth'] = Numeric::convertSize($properties['HEIGHT'] ,$this->blk[$this->blklvl]['inner_width'],$this->FontSize,false); }
 
 	if(isset($attr['WIDTH']) && $attr['WIDTH'] != '') $objattr['width'] = Numeric::convertSize($attr['WIDTH'] ,$this->blk[$this->blklvl]['inner_width']);
@@ -19272,7 +19271,7 @@ function CloseTag($tag)
 	$this->SetFont($this->default_font,'',0,false);
 	$this->SetLineHeight();
 	if (isset($this->blk[$this->blklvl]['InlineProperties'])) { $this->restoreInlineProperties($this->blk[$this->blklvl]['InlineProperties']);}
-	
+
 	if ($page_break_after) {
 		$save_blklvl = $this->blklvl;
 		$save_blk = $this->blk;
@@ -26509,6 +26508,7 @@ function _tableWrite(&$table, $split=false, $startrow=0, $startcol=0, $splitpg=0
 
 
 	}// end of rows
+
 
 	if (count($this->cellBorderBuffer)) { $this->printcellbuffer(); }
 
