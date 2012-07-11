@@ -654,8 +654,8 @@ class SVG {
 			}
 		}
 
-		$svg_w = $this->mpdf_ref->ConvertSize($attribs['width']);	// mm (interprets numbers as pixels)
-		$svg_h = $this->mpdf_ref->ConvertSize($attribs['height']);	// mm
+		$svg_w = Numeric::convertSize($attribs['width']);	// mm (interprets numbers as pixels)
+		$svg_h = Numeric::convertSize($attribs['height']);	// mm
 
 ///*
 		// mPDF 5.0.005
@@ -1638,10 +1638,10 @@ function Arcto($x1, $y1, $x2, $y2, $rx, $ry, $angle, $largeArcFlag, $sweepFlag) 
 
 		if ($maxsize == 'y') { $maxsize = $this->svg_info['h']; }
 		else if ($maxsize == 'x') { $maxsize = $this->svg_info['w']; }
-		$maxsize *= (25.4/$this->mpdf_ref->dpi);	// convert pixels to mm
+		$maxsize *= (25.4/Conf::DPI);	// convert pixels to mm
 		$fontsize=$this->mpdf_ref->FontSize;
 		//Return as pixels
-		$size = $this->mpdf_ref->ConvertSize($size,$maxsize,$fontsize,false) * 1/(25.4/$this->mpdf_ref->dpi);
+		$size = Numeric::convertSize($size,$maxsize,$fontsize,false) * 1/(25.4/Conf::DPI);
 		return $size;
 	}
 
@@ -1653,7 +1653,7 @@ function Arcto($x1, $y1, $x2, $y2, $rx, $ry, $angle, $largeArcFlag, $sweepFlag) 
 	// Setting e.g. margin % will use maxsize (pagewidth) and em will use fontsize
 		$maxsize=$this->mpdf_ref->FontSize;
 		//Return as pts
-		$size = $this->mpdf_ref->ConvertSize($size,$maxsize,false,true) * 72/25.4;
+		$size = Numeric::convertSize($size,$maxsize,false,true) * 72/25.4;
 		return $size;
 	}
 
