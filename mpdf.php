@@ -178,6 +178,7 @@ var $CSSselectMedia;
 var $forcePortraitHeaders;
 var $forcePortraitMargins;
 var $displayDefaultOrientation;
+var $ignore_invalid_utf8;
 var $allowedCSStags;
 var $onlyCoreFonts;
 var $allow_charset_conversion;
@@ -9357,22 +9358,11 @@ function _getImage(&$file, $firsttime=true, $allowvector=true, $orig_srcpath=fal
 	// BMP (Windows Bitmap)
 	else if ($type == 'bmp') {
 		if (!class_exists('bmp', false)) { include(_MPDF_PATH.'classes/bmp.php'); }
-		
-		if ($this->restrictColorSpace==1 || $this->PDFX || $this->restrictColorSpace==3) {
-			if (($this->PDFA && !$this->PDFAauto) || ($this->PDFX && !$this->PDFXauto)) {
-				$this->PDFAXwarnings[] = "Image cannot be converted to suitable colour space for PDFA or PDFX file - ".$file." - (Image replaced by 'no-image'.)";
-			}
-			return $this->_imageError($file, $firsttime, "BMP Image cannot be converted to suitable colour space - ".$file." - (Image replaced by 'no-image'.)"); 
-		}
-
-		if (empty($this->bmp)) { $this->bmp = new bmp(); }
+		if (empty($this->bmp)) { $this->bmp = new bmp($this); }
 		$info = $this->bmp->_getBMPimage($data, $file);
-
-		if ($this->compress) {
-			$info['data'] = gzcompress($info['data']);
-			$info['f']='FlateDecode';
-		} 
-		
+		if (isset($info['error'])) {
+			return $this->_imageError($file, $firsttime, $info['error']); 
+		}
 		if ($firsttime) {
 			$info['i']=count($this->images)+1;
 			$this->images[$file]=$info;
@@ -31132,6 +31122,16 @@ function get_arab_glyphs($char, $type) {
 
 // Call-back function Used for usort in fn _tableWrite
 
+function _cmpdom($a, $b) {
+    return ($a["dom"] < $b["dom"]) ? -1 : 1;
+}
+
+function mb_strrev($str, $enc = 'utf-8'){
+	$ch = array();
+	$ch = preg_split('//u',$str);
+	$revch = array_reverse($ch);
+	return implode('',$revch);
+}
 
 /*-- COLUMNS --*/
 // Callback function from function printcolumnbuffer in mpdf

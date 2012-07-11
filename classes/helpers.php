@@ -232,17 +232,13 @@ class Color
 
 class Text
 {
-	static function getCharWidth(&$cw, $u, $isdef=true)
+	static function getCharWidth(&$cw, $u)
 	{
-		if ($u == 0) {
-			return $isdef? false : 0;
-		} else {
-			$w = (ord($cw[$u*2]) << 8) + ord($cw[$u*2+1]);
-			if ($w == 65535) {
-				return 0;
-			}
-			return $w;
+		$w = (ord($cw[$u*2]) << 8) + ord($cw[$u*2+1]);
+		if ($w == 65535) {
+			return 0;
 		}
+		return $w;
 	}
 	
 	static function charDefined(&$cw, $u)
@@ -251,7 +247,7 @@ class Text
 			return false;
 		}
 		$w = (ord($cw[$u*2]) << 8) + ord($cw[$u*2+1]);
-		return ($w)? true : false;
+		return (bool)$w;
 	}
 	
 	static function escape($s)
