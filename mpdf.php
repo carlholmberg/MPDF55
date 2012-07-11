@@ -2620,7 +2620,7 @@ function AddFont($family,$style='') {
 	if (!isset($name) || $originalsize != $ttfstat['size'] || $regenerate) {
 		if (!class_exists('TTFontFile', false)) { include(_MPDF_PATH .'classes/ttfontsuni.php'); }
 		$ttf = new TTFontFile();
-		$ttf->getMetrics($ttffile, $TTCfontID, $this->debugfonts, $BMPonly, $this->useKerning, $unAGlyphs);	// mPDF 5.4.05
+		$ttf->getMetrics($ttffile, $TTCfontID, $BMPonly, $this->useKerning, $unAGlyphs);	// mPDF 5.4.05
 		$cw = $ttf->charWidths;
 		$kerninfo = $ttf->kerninfo;
 		$haskerninfo = true;
@@ -2683,7 +2683,7 @@ function AddFont($family,$style='') {
 			@unlink(_MPDF_TTFONTDATAPATH.$fontkey.'.cw127.php');
 			@unlink(_MPDF_TTFONTDATAPATH.$fontkey.'.cw');
 		}
-		else if ($this->debugfonts) { $this->Error('Cannot write to the font caching directory - '._MPDF_TTFONTDATAPATH); }
+		else if (Conf::DEBUG_FONTS) { $this->Error('Cannot write to the font caching directory - '._MPDF_TTFONTDATAPATH); }
 		unset($ttf);
 	}
 	else {
@@ -7571,7 +7571,7 @@ function _putfonts() {
 				else {
 					if (!class_exists('TTFontFile', false)) { include(_MPDF_PATH .'classes/ttfontsuni.php'); }
 					$ttf = new TTFontFile();
-					$font = $ttf->repackageTTF($this->FontFiles[$fontkey]['ttffile'], $this->fonts[$fontkey]['TTCfontID'], $this->debugfonts, $this->fonts[$fontkey]['unAGlyphs']);	// mPDF 5.4.05
+					$font = $ttf->repackageTTF($this->FontFiles[$fontkey]['ttffile'], $this->fonts[$fontkey]['TTCfontID'], $this->fonts[$fontkey]['unAGlyphs']);	// mPDF 5.4.05
 
 					$originalsize = strlen($font);
 					$font = gzcompress($font);
@@ -7666,7 +7666,7 @@ function _putfonts() {
 			$ssfaid++;
 			$subset = $font['subsets'][$sfid];
 			unset($subset[0]);
-			$ttfontstream = $ttf->makeSubsetSIP($font['ttffile'], $subset, $font['TTCfontID'], $this->debugfonts);
+			$ttfontstream = $ttf->makeSubsetSIP($font['ttffile'], $subset, $font['TTCfontID']);
 			$ttfontsize = strlen($ttfontstream);
 			$fontstream = gzcompress($ttfontstream);
 			$widthstring = '';
@@ -7769,7 +7769,7 @@ function _putfonts() {
 				$fontname = 'MPDFA'.$ssfaid.'+'.$font['name'];
 				$subset = $font['subset'];
 				unset($subset[0]);
-				$ttfontstream = $ttf->makeSubset($font['ttffile'], $subset, $font['TTCfontID'], $this->debugfonts, $font['unAGlyphs']);	// mPDF 5.4.05
+				$ttfontstream = $ttf->makeSubset($font['ttffile'], $subset, $font['TTCfontID'], $font['unAGlyphs']);	// mPDF 5.4.05
 				$ttfontsize = strlen($ttfontstream);
 				$fontstream = gzcompress($ttfontstream);
 				$codeToGlyph = $ttf->codeToGlyph;
@@ -7891,7 +7891,7 @@ function _putfonts() {
 				else {
 					if (!class_exists('TTFontFile', false)) { include(_MPDF_PATH .'classes/ttfontsuni.php'); }
 					$ttf = new TTFontFile();
-					$charToGlyph = $ttf->getCTG($font['ttffile'], $font['TTCfontID'], $this->debugfonts, $font['unAGlyphs']);	// mPDF 5.4.05
+					$charToGlyph = $ttf->getCTG($font['ttffile'], $font['TTCfontID'], $font['unAGlyphs']);	// mPDF 5.4.05
 					$cidtogidmap = str_pad('', 256*256*2, "\x00");
 					foreach($charToGlyph as $cc=>$glyph) {
 						$cidtogidmap[$cc*2] = chr($glyph >> 8);

@@ -1,5 +1,4 @@
 <?php
-
 /*******************************************************************************
 * TTFontFile class                                                             *
 *                                                                              *
@@ -15,6 +14,8 @@
 * modification of the file.                                                    *
 *                                                                              *
 *******************************************************************************/
+
+if (!class_exists('Conf')) { class Conf { const DEBUG_FONTS = false; } }
 
 // Define the value used in the "head" table of a created TTF file
 // 0x74727565 "true" for Mac
@@ -80,14 +81,12 @@ class BinaryFile
 		return $a;
 	}
 	
-	
 	function seek($pos)
 	{
 		$this->_pos = $pos;
 		fseek($this->fh,$this->_pos);
 		return $this->_pos;
 	}
-
 	
 	function skip($delta)
 	{
@@ -118,7 +117,6 @@ class BinaryFile
 	}
 
 	
-	
 	static function pack_short($val) {
 		if ($val<0) { 
 			$val = abs($val);
@@ -127,7 +125,6 @@ class BinaryFile
 		}
 		return pack("n",$val); 
 	}
-
 
     static function unpack_short($s) {
 		$a = (ord($s[0])<<8) + ord($s[1]);
@@ -168,7 +165,6 @@ var $sFamilyClass;
 var $sFamilySubClass;
 var $sipset;
 var $smpset;
-var $_pos;
 var $numTables;
 var $searchRange;
 var $entrySelector;
@@ -205,7 +201,7 @@ var $kerninfo;
 	}
 
 
-	function getMetrics($file, $TTCfontID=0, $debug=false, $BMPonly=false, $kerninfo=false, $unAGlyphs=false) {	// mPDF 5.4.05
+	function getMetrics($file, $TTCfontID=0, $BMPonly=false, $kerninfo=false, $unAGlyphs=false) {	// mPDF 5.4.05
 		$this->unAGlyphs = $unAGlyphs;	// mPDF 5.4.05
 		
 		$this->open($file);
@@ -239,27 +235,27 @@ var $kerninfo;
 			$this->seek($this->TTCFonts[$TTCfontID]['offset']);
 			$this->version = $version = $this->read_ulong();	// TTFont version again now
 		}
-		$this->readTableDirectory($debug);
-		$this->extractInfo($debug, $BMPonly, $kerninfo); 
+		$this->readTableDirectory();
+		$this->extractInfo($BMPonly, $kerninfo); 
 		fclose($this->fh);
 	}
 
 
-	function readTableDirectory($debug=false) {
+	function readTableDirectory() {
 	    $this->numTables = $this->read_ushort();
-            $this->searchRange = $this->read_ushort();
-            $this->entrySelector = $this->read_ushort();
-            $this->rangeShift = $this->read_ushort();
-            $this->tables = array();	
-            for ($i=0;$i<$this->numTables;$i++) {
-                $record = array();
-                $record['tag'] = $this->read_tag();
-                $record['checksum'] = array($this->read_ushort(),$this->read_ushort());
-                $record['offset'] = $this->read_ulong();
-                $record['length'] = $this->read_ulong();
-                $this->tables[$record['tag']] = $record;
+        $this->searchRange = $this->read_ushort();
+        $this->entrySelector = $this->read_ushort();
+        $this->rangeShift = $this->read_ushort();
+        $this->tables = array();	
+        for ($i=0;$i<$this->numTables;$i++) {
+            $record = array();
+            $record['tag'] = $this->read_tag();
+            $record['checksum'] = array($this->read_ushort(),$this->read_ushort());
+            $record['offset'] = $this->read_ulong();
+            $record['length'] = $this->read_ulong();
+            $this->tables[$record['tag']] = $record;
 		}
-		if ($debug) $this->checksumTables();
+		if (Conf::DEBUG_FONTS) $this->checksumTables();
 	}
 
 	function checksumTables() {
@@ -308,7 +304,7 @@ var $kerninfo;
 		return array($hi, $lo);
 	}
 
-	function get_table_pos($tag) {
+	function get_table_pos($tag) { s
 		$offset = $this->tables[$tag]['offset'];
 		$length = $this->tables[$tag]['length'];
 		return array($offset, $length);
@@ -336,7 +332,7 @@ var $kerninfo;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-	function getCTG($file, $TTCfontID=0, $debug=false, $unAGlyphs=false) {	// mPDF 5.4.05
+	function getCTG($file, $TTCfontID=0, $unAGlyphs=false) {	// mPDF 5.4.05
 		$this->unAGlyphs = $unAGlyphs;	// mPDF 5.4.05
 		
 		$this->open($file);
@@ -359,7 +355,7 @@ var $kerninfo;
 			$this->seek($this->TTCFonts[$TTCfontID]['offset']);
 			$this->version = $version = $this->read_ulong();	// TTFont version again now
 		}
-		$this->readTableDirectory($debug);
+		$this->readTableDirectory();
 
 
 		// cmap - Character to glyph index mapping table
@@ -425,7 +421,7 @@ var $kerninfo;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-	function extractInfo($debug=false, $BMPonly=false, $kerninfo=false) {
+	function extractInfo($BMPonly=false, $kerninfo=false) {
 		$this->panose = array();
 		$this->sFamilyClass = 0;
 		$this->sFamilySubClass = 0;
@@ -487,7 +483,7 @@ var $kerninfo;
 				$psName = '';
 			if (!$psName)
 				die("Could not find PostScript font name: ".$this->filename);
-			if ($debug) {
+			if (Conf::DEBUG_FONTS) {
 			   for ($i=0;$i<count($psName);$i++) {
 				$c = $psName[$i];
 				$oc = ord($c);
@@ -507,7 +503,7 @@ var $kerninfo;
 		// head - Font header table
 		///////////////////////////////////
 		$this->seek_table("head");
-		if ($debug) { 
+		if (Conf::DEBUG_FONTS) { 
 			$ver_maj = $this->read_ushort();
 			$ver_min = $this->read_ushort();
 			if ($ver_maj != 1)
@@ -599,7 +595,7 @@ var $kerninfo;
 		// post - PostScript table
 		///////////////////////////////////
 		$this->seek_table("post");
-		if ($debug) { 
+		if (Conf::DEBUG_FONTS) { 
 			$ver_maj = $this->read_ushort();
 			$ver_min = $this->read_ushort();
 			if ($ver_maj <1 || $ver_maj >4) 
@@ -626,7 +622,7 @@ var $kerninfo;
 		// hhea - Horizontal header table
 		///////////////////////////////////
 		$this->seek_table("hhea");
-		if ($debug) { 
+		if (Conf::DEBUG_FONTS) { 
 			$ver_maj = $this->read_ushort();
 			$ver_min = $this->read_ushort();
 			if ($ver_maj != 1)
@@ -647,7 +643,7 @@ var $kerninfo;
 		// maxp - Maximum profile table
 		///////////////////////////////////
 		$this->seek_table("maxp");
-		if ($debug) { 
+		if (Conf::DEBUG_FONTS) { 
 			$ver_maj = $this->read_ushort();
 			$ver_min = $this->read_ushort();
 			if ($ver_maj != 1)
@@ -776,7 +772,7 @@ var $kerninfo;
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
-	function makeSubset($file, &$subset, $TTCfontID=0, $debug=false, $unAGlyphs=false) {	// mPDF 5.4.05
+	function makeSubset($file, &$subset, $TTCfontID=0, $unAGlyphs=false) {	// mPDF 5.4.05
 		$this->unAGlyphs = $unAGlyphs;	// mPDF 5.4.05
 		
 		$this->open($file);
@@ -803,7 +799,7 @@ var $kerninfo;
 			$this->seek($this->TTCFonts[$TTCfontID]['offset']);
 			$this->version = $version = $this->read_ulong();	// TTFont version again now
 		}
-		$this->readTableDirectory($debug);
+		$this->readTableDirectory();
 
 		///////////////////////////////////
 		// head - Font header table
@@ -1255,7 +1251,7 @@ var $kerninfo;
 //================================================================================
 
 	// Also does SMP
-	function makeSubsetSIP($file, &$subset, $TTCfontID=0, $debug=false) {
+	function makeSubsetSIP($file, &$subset, $TTCfontID=0) {
 		
 		$this->open($file);
 
@@ -1281,7 +1277,7 @@ var $kerninfo;
 			$this->seek($this->TTCFonts[$TTCfontID]['offset']);
 			$this->version = $version = $this->read_ulong();	// TTFont version again now
 		}
-		$this->readTableDirectory($debug);
+		$this->readTableDirectory();
 
 
 
@@ -2028,7 +2024,7 @@ var $kerninfo;
 	}
 
 
-	function repackageTTF($file, $TTCfontID=0, $debug=false, $unAGlyphs=false) {	// mPDF 5.4.05
+	function repackageTTF($file, $TTCfontID=0, $unAGlyphs=false) {	// mPDF 5.4.05
 		$this->unAGlyphs = $unAGlyphs;	// mPDF 5.4.05
 		
 		$this->open($file);
@@ -2055,7 +2051,7 @@ var $kerninfo;
 			$this->seek($this->TTCFonts[$TTCfontID]['offset']);
 			$this->version = $version = $this->read_ulong();	// TTFont version again now
 		}
-		$this->readTableDirectory($debug);
+		$this->readTableDirectory();
 		$tags = array ('OS/2', 'cmap', 'glyf', 'head', 'hhea', 'hmtx', 'loca', 'maxp', 'name', 'post', 'cvt ', 'fpgm', 'gasp', 'prep');
 /*
 Tables which require glyphIndex
