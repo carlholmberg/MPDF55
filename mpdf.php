@@ -18196,10 +18196,11 @@ function CloseTag($tag)
 	$this->$ltag = false;
     }
 
-
-    if($tag=='FONT' || $tag=='SPAN' || $tag=='CODE' || $tag=='KBD' || $tag=='SAMP' || $tag=='TT' || $tag=='VAR' 
-	|| $tag=='INS' || $tag=='STRONG' || $tag=='CITE' || $tag=='SUB' || $tag=='SUP' || $tag=='S' || $tag=='STRIKE' || $tag=='DEL'
-	|| $tag=='Q' || $tag=='EM' || $tag=='B' || $tag=='I' || $tag=='U' | $tag=='SMALL' || $tag=='BIG' || $tag=='ACRONYM') {
+	$tags = array('FONT', 'SPAN', 'CODE', 'KBD', 'SAMP', 'TT', 'VAR', 'INS',
+				  'STRONG', 'CITE', 'SUB', 'SUP', 'S', 'STRIKE', 'DEL', 'Q',
+				  'EM', 'B', 'I', 'U', 'SMALL', 'BIG', 'ACRONYM');
+	
+    if(in_array($tag, $tags)) {
 
 
 	if ($tag == 'SPAN') {
